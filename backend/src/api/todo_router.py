@@ -17,7 +17,7 @@ from ..services.todo_service import (
 router = APIRouter()
 
 @router.post("/", response_model=TodoRead)
-def create_todo(
+def create_todo_endpoint(
     todo: TodoCreate,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)

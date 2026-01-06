@@ -20,6 +20,7 @@ def create_todo(session: Session, todo: TodoCreate, user_id: int) -> Todo:
     db_todo = Todo(
         title=todo.title,
         description=todo.description,
+        due_date=todo.due_date,
         completed=False,  # Default to not completed
         user_id=user_id
     )

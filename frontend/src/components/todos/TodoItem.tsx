@@ -13,6 +13,7 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editTitle, setEditTitle] = React.useState(todo.title);
   const [editDescription, setEditDescription] = React.useState(todo.description || '');
+  const [editDueDate, setEditDueDate] = React.useState(todo.due_date || '');
 
   const handleToggle = () => {
     onToggle(todo.id, !todo.completed);
@@ -25,7 +26,11 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
   };
 
   const handleSave = () => {
-    onUpdate(todo.id, { title: editTitle, description: editDescription });
+    onUpdate(todo.id, {
+      title: editTitle,
+      description: editDescription,
+      due_date: editDueDate || undefined
+    });
     setIsEditing(false);
   };
 
@@ -33,6 +38,7 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
     setIsEditing(false);
     setEditTitle(todo.title);
     setEditDescription(todo.description || '');
+    setEditDueDate(todo.due_date || '');
   };
 
   const handleDelete = () => {
@@ -55,6 +61,12 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
               onChange={(e) => setEditDescription(e.target.value)}
               className="edit-description"
             />
+            <input
+              type="date"
+              value={editDueDate}
+              onChange={(e) => setEditDueDate(e.target.value)}
+              className="edit-date"
+            />
             <div className="edit-buttons">
               <button onClick={handleSave} className="save-btn">Save</button>
               <button onClick={handleCancel} className="cancel-btn">Cancel</button>
@@ -73,6 +85,11 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
                 <h3 className={`todo-title ${todo.completed ? 'completed' : ''}`}>{todo.title}</h3>
                 {todo.description && (
                   <p className={`todo-description ${todo.completed ? 'completed' : ''}`}>{todo.description}</p>
+                )}
+                {todo.due_date && (
+                  <p className={`todo-due-date ${todo.completed ? 'completed' : ''}`}>
+                    Due: {new Date(todo.due_date).toLocaleDateString()}
+                  </p>
                 )}
               </div>
             </div>
@@ -139,6 +156,17 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
           color: #aaa;
         }
 
+        .todo-due-date {
+          margin: 5px 0 0 0;
+          color: #666;
+          font-size: 0.8rem;
+          font-weight: bold;
+        }
+
+        .todo-due-date.completed {
+          color: #aaa;
+        }
+
         .todo-actions {
           display: flex;
           gap: 5px;
@@ -188,6 +216,15 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
           border-radius: 4px;
           height: 60px;
           resize: vertical;
+          font-size: 0.9rem;
+        }
+
+        .edit-date {
+          width: 100%;
+          padding: 8px;
+          margin-bottom: 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
           font-size: 0.9rem;
         }
 

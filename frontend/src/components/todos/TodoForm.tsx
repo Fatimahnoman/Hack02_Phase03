@@ -8,14 +8,28 @@ interface TodoFormProps {
 const TodoForm = ({ onSubmit }: TodoFormProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    onSubmit({ title: title.trim(), description: description.trim() || undefined });
+    // Format the date to ISO string if provided
+    let formattedDueDate: string | undefined = undefined;
+    if (dueDate) {
+      // Create a new Date object and set it to UTC midnight to avoid timezone issues
+      const date = new Date(dueDate);
+      formattedDueDate = date.toISOString();
+    }
+
+    onSubmit({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      due_date: formattedDueDate
+    });
     setTitle('');
     setDescription('');
+    setDueDate('');
   };
 
   return (
@@ -38,6 +52,14 @@ const TodoForm = ({ onSubmit }: TodoFormProps) => {
           className="description-input"
         />
       </div>
+      <div className="form-group">
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="date-input"
+        />
+      </div>
       <button type="submit" className="submit-btn">Add Todo</button>
       <style jsx>{`
         .todo-form {
@@ -53,7 +75,7 @@ const TodoForm = ({ onSubmit }: TodoFormProps) => {
           margin-bottom: 15px;
         }
 
-        .title-input, .description-input {
+        .title-input, .description-input, .date-input {
           width: 100%;
           padding: 12px;
           border: 1px solid #ddd;

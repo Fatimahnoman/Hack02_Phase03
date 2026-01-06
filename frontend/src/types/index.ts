@@ -10,6 +10,7 @@ export interface Todo {
   title: string;
   description?: string;
   completed: boolean;
+  due_date?: string; // Optional due date
   user_id: number;
   created_at: string;
   updated_at: string;
@@ -18,11 +19,13 @@ export interface Todo {
 export interface TodoCreate {
   title: string;
   description?: string;
+  due_date?: string; // Optional due date
 }
 
 export interface TodoUpdate {
   title?: string;
   description?: string;
+  due_date?: string;
   completed?: boolean;
 }
 
