@@ -7,28 +7,29 @@ const HomePage = () => {
     <Layout>
       <div className="container">
         <div className="hero">
-          <h1>Welcome to Evolution of Todo</h1>
-          <p>A modern, full-featured todo application with authentication.</p>
-          <div className="cta-buttons">
-            <Link href="/signup">
-              <button className="primary-btn">Get Started</button>
-            </Link>
-            <Link href="/signin">
-              <button className="secondary-btn">Sign In</button>
-            </Link>
-          </div>
+          <h1 className="evolution-text">Evolution of Todo</h1>
+          <p><strong>Welcome To Our Task Manager</strong></p>
+          <p>Would you like to Sign In? If yes then click on <Link href="/signin" legacyBehavior><a className="signin-link">Sign In</a></Link></p>
         </div>
       </div>
       <style jsx>{`
         .hero {
           text-align: center;
           padding: 60px 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 80vh;
         }
 
-        .hero h1 {
-          font-size: 2.5rem;
-          margin-bottom: 20px;
-          color: #333;
+        .evolution-text {
+          font-size: 1.5rem;
+          margin: 10px 0 20px 0;
+          color: #0070f3; /* Blue color */
+          text-decoration: underline; /* Underline */
+          text-decoration-color: #000; /* Black underline */
+          font-weight: bold;
         }
 
         .hero p {
@@ -37,58 +38,24 @@ const HomePage = () => {
           margin-bottom: 30px;
         }
 
-        .cta-buttons {
-          display: flex;
-          justify-content: center;
-          gap: 15px;
-          flex-wrap: wrap;
-        }
-
-        .primary-btn, .secondary-btn {
-          padding: 12px 24px;
-          border-radius: 6px;
-          font-size: 1rem;
-          cursor: pointer;
-          text-decoration: none;
-          display: inline-block;
-        }
-
-        .primary-btn {
-          background-color: #0070f3;
-          color: white;
-          border: none;
-        }
-
-        .primary-btn:hover {
-          background-color: #0060e0;
-        }
-
-        .secondary-btn {
-          background-color: white;
+        .signin-link {
           color: #0070f3;
-          border: 1px solid #0070f3;
+          text-decoration: underline;
+          font-weight: bold;
+          cursor: pointer;
         }
 
-        .secondary-btn:hover {
-          background-color: #f0f8ff;
+        .signin-link:hover {
+          color: #0060e0;
         }
 
         @media (max-width: 768px) {
-          .hero h1 {
-            font-size: 2rem;
+          .evolution-text {
+            font-size: 1.2rem;
           }
 
           .hero p {
             font-size: 1rem;
-          }
-
-          .cta-buttons {
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .primary-btn, .secondary-btn {
-            width: 200px;
           }
         }
       `}</style>

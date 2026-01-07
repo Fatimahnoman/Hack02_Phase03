@@ -8,6 +8,14 @@ const SigninPage = () => {
       <div className="container">
         <SigninForm />
       </div>
+
+      <style jsx>{`
+        .container {
+          max-width: 400px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+      `}</style>
     </Layout>
   );
 };

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel import Session
 from typing import List
+from pydantic import BaseModel
 from ..database.database import get_session
 from ..models.todo import Todo, TodoCreate, TodoRead, TodoUpdate
 from ..models.user import User
@@ -15,6 +16,9 @@ from ..services.todo_service import (
 )
 
 router = APIRouter()
+
+class TodoStatusUpdate(BaseModel):
+    completed: bool
 
 @router.post("/", response_model=TodoRead)
 def create_todo_endpoint(
@@ -73,12 +77,12 @@ def delete_todo_endpoint(
 @router.patch("/{todo_id}/status")
 def update_todo_status(
     todo_id: int,
-    completed: bool,
+    status_update: TodoStatusUpdate,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
     # Update the completion status of a specific todo
-    updated_todo = toggle_todo_completion(session, todo_id, completed, current_user.id)
+    updated_todo = toggle_todo_completion(session, todo_id, status_update.completed, current_user.id)
     if not updated_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
     return {"id": updated_todo.id, "completed": updated_todo.completed}

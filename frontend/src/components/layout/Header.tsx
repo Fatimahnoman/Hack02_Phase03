@@ -14,7 +14,7 @@ const Header = () => {
       <div className="container">
         <div className="header-content">
           <Link href="/">
-            <h1 className="logo">Evolution of Todo</h1>
+            <h1 className="logo">Task Manager</h1>
           </Link>
           <nav className="nav">
             {isAuthenticated ? (
@@ -48,7 +48,7 @@ const Header = () => {
         .logo {
           margin: 0;
           font-size: 1.5rem;
-          color: #0070f3;
+          color: #333; /* Changed from blue to neutral color */
         }
 
         .logo:hover {
