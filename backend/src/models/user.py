@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime, timezone
+from pydantic import field_validator
 
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
@@ -14,6 +15,13 @@ class User(UserBase, table=True):
 class UserCreate(UserBase):
     email: str
     password: str
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_length(cls, v):
+        if len(v) > 72:
+            raise ValueError('Password must not exceed 72 characters for security reasons')
+        return v
 
 class UserRead(SQLModel):
     id: int

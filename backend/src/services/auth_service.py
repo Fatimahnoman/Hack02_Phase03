@@ -28,7 +28,16 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # Hash password
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    try:
+        return pwd_context.hash(password)
+    except Exception as e:
+        error_msg = str(e)
+        # Handle bcrypt's 72-byte password limit specifically
+        if "password cannot be longer than 72 bytes" in error_msg or "truncate manually if necessary" in error_msg:
+            raise ValueError("Password must not exceed 72 characters for security reasons")
+        else:
+            # Re-raise other hashing errors with more context
+            raise ValueError(f"Password hashing failed: {error_msg}")
 
 # Get user by email
 def get_user_by_email(session: Session, email: str) -> Optional[User]:
