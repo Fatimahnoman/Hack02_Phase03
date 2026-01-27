@@ -20,9 +20,6 @@ from .circuit_breaker import ai_circuit_breaker, CircuitBreakerError
 
 logger = logging.getLogger(__name__)
 
-# Set OpenAI API key from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 
 class AIAgentService:
     """
@@ -71,8 +68,8 @@ class AIAgentService:
             if api_base_url:
                 # Use OpenRouter API
                 client = openai.OpenAI(
-                api_key=os.getenv("OPENAI_API_KEY"),
-                base_url=os.getenv("OPENAI_API_BASE_URL")
+                    api_key=os.getenv("OPENAI_API_KEY"),
+                    base_url=os.getenv("OPENAI_API_BASE_URL")
                 )
             else:
                 # Use standard OpenAI API

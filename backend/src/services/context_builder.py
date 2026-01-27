@@ -5,7 +5,7 @@ import logging
 from sqlmodel import Session, select
 from typing import List, Optional
 from uuid import UUID
-from ..models.message import Message
+from ..models.message import Message, MessageRole
 from ..config import settings
 
 import functools
@@ -129,7 +129,7 @@ class ContextBuilder:
         for message in reversed(messages):  # Start from the end (most recent)
             # Rough estimation: ~4 characters per token
             content_tokens = len(message.content) // 4
-            role_tokens = len(message.role.value) // 4
+            role_tokens = len(str(message.role)) // 4
             estimated_tokens += content_tokens + role_tokens
 
             if estimated_tokens > max_tokens:
