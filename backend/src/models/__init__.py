@@ -1,5 +1,6 @@
 from .conversation import Conversation, ConversationCreate, ConversationRead
 from .message import Message, MessageCreate, MessageRead, MessageRole
+from .user import User, UserCreate, UserRead
 
 __all__ = [
     "Conversation",
@@ -8,5 +9,8 @@ __all__ = [
     "Message",
     "MessageCreate",
     "MessageRead",
-    "MessageRole"
+    "MessageRole",
+    "User",
+    "UserCreate",
+    "UserRead"
 ]

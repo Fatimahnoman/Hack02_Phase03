@@ -5,8 +5,8 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from ..models.user import User, UserCreate, UserRead
-from ..config import settings
-from ..database import get_session
+from ..core.config import settings
+from ..core.database import get_session_context as get_session
 
 # Password hashing
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")

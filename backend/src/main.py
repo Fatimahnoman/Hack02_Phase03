@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from .api.chat_router import router as chat_router
+from .api.chat_endpoint import router as chat_router
 from .api.auth_router import router as auth_router
-from .database import create_db_and_tables
+from .core.database import init_db
+from .models import *
+from .core.config import settings
 import logging
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -24,16 +26,17 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Creating database tables...")
-    create_db_and_tables()
-    logger.info("Database tables created successfully!")
+    logger.info("Initializing database...")
+    init_db()
+    logger.info("Database initialized successfully!")
     yield
     # Shutdown
 
 app = FastAPI(
-    title="Stateless Chat API",
-    description="API for managing chat conversations in a stateless manner",
-    version="1.0.0",
+    title=settings.app_name,
+    description="API for agent-orchestrated task management via MCP tools",
+    version=settings.app_version,
+    debug=settings.debug,
     lifespan=lifespan
 )
 
@@ -47,8 +50,8 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-app.include_router(chat_router, prefix="/api", tags=["chat"])
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
@@ -69,8 +72,8 @@ async def general_exception_handler(request, exc):
 @app.get("/")
 def read_root():
     logger.info("Root endpoint accessed")
-    return {"message": "Stateless Chat API is running!"}
+    return {"message": settings.app_name, "version": settings.app_version}
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "service": "stateless-chat-api"}
+    return {"status": "healthy", "service": "agent-task-management-api", "version": settings.app_version}

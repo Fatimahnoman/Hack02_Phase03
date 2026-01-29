@@ -4,7 +4,7 @@ from sqlmodel import Session
 from typing import Optional
 from datetime import timedelta
 from pydantic import BaseModel
-from ..database import get_session
+from ..core.database import get_session_context
 from ..models.user import User, UserCreate, UserRead
 from ..services.auth_service import (
     authenticate_user,
@@ -17,7 +17,7 @@ router = APIRouter()
 security = HTTPBearer()
 
 @router.post("/register", response_model=UserRead)
-def register(user: UserCreate, session: Session = Depends(get_session)):
+def register(user: UserCreate, session: Session = Depends(get_session_context)):
     try:
         # Check if user already exists
         existing_user = get_user_by_email(session, user.email)
@@ -47,7 +47,7 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/login")
-def login(request: LoginRequest, session: Session = Depends(get_session)):
+def login(request: LoginRequest, session: Session = Depends(get_session_context)):
     user = authenticate_user(session, request.email, request.password)
     if not user:
         raise HTTPException(
