@@ -55,7 +55,7 @@ const ChatInterface = () => {
 
     try {
       // Call the backend chat API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/${user?.email}/chat`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const ChatInterface = () => {
 
       const assistantMessage: Message = {
         id: Date.now().toString(),
-        content: data.message,
+        content: data.response,
         role: 'assistant',
         timestamp: new Date(),
       };

@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from .api.chat_endpoint import router as chat_router
 from .api.auth_router import router as auth_router
 from .core.database import init_db
-from .models import *
+from .models import *  # Import all models to register them with SQLModel
 from .core.config import settings
 import logging
 from contextlib import asynccontextmanager

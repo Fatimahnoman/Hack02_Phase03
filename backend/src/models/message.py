@@ -1,11 +1,9 @@
-"""
-Message model for the stateless chat API.
-"""
 from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlalchemy import Column, String, JSON
+from typing import Optional, Dict, Any
 from datetime import datetime
-from uuid import UUID, uuid4
 from enum import Enum
+import uuid
 
 
 class MessageRole(str, Enum):
@@ -14,39 +12,49 @@ class MessageRole(str, Enum):
     """
     user = "user"
     assistant = "assistant"
+    system = "system"
+    tool = "tool"
 
 
 class MessageBase(SQLModel):
-    conversation_id: UUID
-    role: MessageRole
-    content: str
-    # Additional fields can be added here as needed
+    """Base class for Message with shared attributes."""
+
+    conversation_id: uuid.UUID = Field(foreign_key="conversation.id")
+    role: str = Field(sa_column=Column(String, nullable=False))  # "user", "assistant", "system", "tool"
+    content: str = Field(sa_column=Column(String, nullable=False))
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    tool_call_id: Optional[uuid.UUID] = Field(default=None, foreign_key="toolcall.id")
 
 
 class Message(MessageBase, table=True):
-    """
-    Message model containing the content of a communication, the role (user/assistant),
-    timestamp, and association with a conversation.
-    """
-    id: Optional[UUID] = Field(default_factory=uuid4, primary_key=True)
-    conversation_id: UUID = Field(description="Foreign key linking to Conversation")
-    role: MessageRole = Field(sa_column_kwargs={"name": "role"}, description="Indicates sender type: user or assistant")
-    content: str = Field(description="The actual message content")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="When the message was created")
+    """Message model representing an individual message within a conversation."""
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    conversation_id: uuid.UUID = Field(foreign_key="conversation.id")
+    role: str = Field(sa_column=Column(String, nullable=False))  # "user", "assistant", "system", "tool"
+    content: str = Field(sa_column=Column(String, nullable=False))
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    tool_call_id: Optional[uuid.UUID] = Field(default=None, foreign_key="toolcall.id")
 
 
-class MessageCreate(MessageBase):
-    """
-    Model for creating a new message.
-    """
-    conversation_id: UUID
-    role: MessageRole
+class MessageCreate(SQLModel):
+    """Schema for creating a new message."""
+
+    conversation_id: uuid.UUID
+    role: str  # "user", "assistant", "system", "tool"
     content: str
+    tool_call_id: Optional[uuid.UUID] = None
+
+
+class MessageUpdate(SQLModel):
+    """Schema for updating an existing message."""
+
+    content: Optional[str] = None
+    role: Optional[str] = None
 
 
 class MessageRead(MessageBase):
-    """
-    Model for reading message data.
-    """
-    id: UUID
+    """Schema for reading message data."""
+
+    id: uuid.UUID
     timestamp: datetime

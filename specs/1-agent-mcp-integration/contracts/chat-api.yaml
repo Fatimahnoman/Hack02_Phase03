@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: Agent-Orchestrated Task Management API
+  description: API for natural language task management via OpenAI Agent and MCP tools
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+
+paths:
+  /chat:
+    post:
+      summary: Send a message to the agent for processing
+      description: Processes natural language input and returns agent response with tool call metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful response from the agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: The user's message to be processed by the agent
+          example: "Create a new task called 'Update documentation'"
+        conversation_id:
+          type: string
+          format: uuid
+          description: Optional conversation ID to continue an existing conversation
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - conversation_id
+        - tool_calls
+      properties:
+        response:
+          type: string
+          description: The agent's response to the user
+          example: "I've created a new task called 'Update documentation'."
+        conversation_id:
+          type: string
+          format: uuid
+          description: The ID of the conversation
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        tool_calls:
+          type: array
+          description: Metadata about the MCP tools called during processing
+          items:
+            $ref: '#/components/schemas/ToolCallMetadata'
+        timestamp:
+          type: string
+          format: date-time
+          description: When the response was generated
+          example: "2023-10-05T14:48:00Z"
+
+    ToolCallMetadata:
+      type: object
+      required:
+        - function_name
+        - parameters
+        - result
+        - status
+      properties:
+        function_name:
+          type: string
+          description: The name of the MCP tool function that was called
+          example: "create_task"
+        parameters:
+          type: object
+          description: The parameters passed to the tool function
+          example:
+            title: "Update documentation"
+            description: "Update the project documentation"
+        result:
+          type: object
+          description: The result returned by the tool function
+          example:
+            id: "task-uuid-123"
+            title: "Update documentation"
+            status: "created"
+        status:
+          type: string
+          description: The status of the tool call
+          enum: [success, error]
+          example: "success"
+        execution_time_ms:
+          type: number
+          description: Time taken to execute the tool call in milliseconds
+          example: 150
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: The error code
+          example: "AGENT_PROCESSING_ERROR"
+        message:
+          type: string
+          description: A human-readable description of the error
+          example: "Failed to process the agent request due to an internal error"

@@ -1,39 +1,35 @@
-"""
-Conversation model for the stateless chat API.
-"""
 from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, String, JSON
 from typing import Optional
 from datetime import datetime
-from uuid import UUID, uuid4
+import uuid
 
 
-class ConversationBase(SQLModel):
-    user_id: str
-    # Additional fields can be added here as needed
+class Conversation(SQLModel, table=True):
+    """Conversation model representing a sequence of messages between a user and the agent, stored in the database with timestamps and metadata."""
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    conversation_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-class Conversation(ConversationBase, table=True):
-    """
-    Conversation model representing a unique chat thread between a user and the assistant.
-    """
-    id: Optional[UUID] = Field(default_factory=uuid4, primary_key=True)
-    user_id: str = Field(description="Identifier for the user who owns this conversation")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when conversation was created")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when conversation was last updated")
+class ConversationCreate(SQLModel):
+    """Schema for creating a new conversation."""
+
+    conversation_metadata: Optional[dict] = None
 
 
-class ConversationCreate(ConversationBase):
-    """
-    Model for creating a new conversation.
-    """
-    user_id: str
-    pass
+class ConversationUpdate(SQLModel):
+    """Schema for updating an existing conversation."""
+
+    conversation_metadata: Optional[dict] = None
 
 
-class ConversationRead(ConversationBase):
-    """
-    Model for reading conversation data.
-    """
-    id: UUID
+class ConversationRead(SQLModel):
+    """Schema for reading conversation data."""
+
+    id: uuid.UUID
+    conversation_metadata: Optional[dict] = None
     created_at: datetime
     updated_at: datetime
