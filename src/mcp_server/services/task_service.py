@@ -45,7 +45,7 @@ class TaskService:
             return None
 
         # Update only the fields that are provided
-        update_data = task_update.dict(exclude_unset=True)
+        update_data = task_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(task, field, value)
 

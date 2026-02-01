@@ -1,5 +1,5 @@
 from mcp.server import Server
-from mcp.types import Tool, ArgumentsSchema
+from mcp.types import Tool
 from pydantic import BaseModel
 from typing import Dict, Any
 from sqlmodel import Session
@@ -27,6 +27,9 @@ async def list_tasks_tool(arguments: ListTasksArguments) -> Dict[str, Any]:
         is_valid, error_msg = validate_task_status(arguments.status_filter)
         if not is_valid:
             return {"success": False, "message": error_msg}
+
+    from src.mcp_server.models.database import create_db_and_tables
+    create_db_and_tables()  # Ensure tables exist
 
     with next(get_session()) as session:
         try:

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel import Session
 from typing import List
 from pydantic import BaseModel
-from ..database.database import get_session
+from ..core.database import get_session_context as get_session
 from ..models.todo import Todo, TodoCreate, TodoRead, TodoUpdate
 from ..models.user import User
 from ..services.auth_service import get_current_user

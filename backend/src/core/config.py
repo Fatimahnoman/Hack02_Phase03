@@ -23,16 +23,50 @@ class Settings(BaseSettings):
     # JWT settings
     secret_key: str = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
     algorithm: str = os.getenv("ALGORITHM", "HS256")
+    access_token_expire_minutes: int = 30  # Default value
 
     # MCP settings
     mcp_server_url: str = os.getenv("MCP_SERVER_URL", "")
 
     # Additional settings from .env file
     next_public_api_url: str = os.getenv("NEXT_PUBLIC_API_URL", "http://127.0.0.1:8000")
-    agent_temperature: float = float(os.getenv("AGENT_TEMPERATURE", "0.7"))
-    max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "8000"))
-    max_response_tokens: int = int(os.getenv("MAX_RESPONSE_TOKENS", "1000"))
+    allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")
+
+    # Numeric settings with error handling
+    agent_temperature: float
+    max_context_tokens: int
+    max_response_tokens: int
     fallback_response: str = os.getenv("FALLBACK_RESPONSE", "Hi there! 👋 Hello! I'm your AI assistant. How can I help you today?")
+
+    class Config:
+        env_file = ".env"
+        extra = "ignore"  # Ignore extra fields that don't match
+
+    def model_post_init(self, __context):
+        # Set defaults and handle potential conversion errors
+        try:
+            temp_val = os.getenv("AGENT_TEMPERATURE", "0.7")
+            self.agent_temperature = float(temp_val)
+        except (ValueError, TypeError):
+            self.agent_temperature = 0.7
+
+        try:
+            tokens_val = os.getenv("MAX_CONTEXT_TOKENS", "8000")
+            self.max_context_tokens = int(tokens_val)
+        except (ValueError, TypeError):
+            self.max_context_tokens = 8000
+
+        try:
+            resp_tokens_val = os.getenv("MAX_RESPONSE_TOKENS", "1000")
+            self.max_response_tokens = int(resp_tokens_val)
+        except (ValueError, TypeError):
+            self.max_response_tokens = 1000
+
+        try:
+            expire_minutes_val = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+            self.access_token_expire_minutes = int(expire_minutes_val)
+        except (ValueError, TypeError):
+            self.access_token_expire_minutes = 30
 
     class Config:
         env_file = ".env"

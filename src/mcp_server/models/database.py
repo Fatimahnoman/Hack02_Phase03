@@ -1,6 +1,4 @@
-from sqlmodel import SQLModel, create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine as sqlalchemy_create_engine
+from sqlmodel import SQLModel, create_engine, Session
 from config.settings import settings
 from typing import Generator
 import os
@@ -8,17 +6,11 @@ import os
 # Create the database engine
 engine = create_engine(settings.database_url, echo=False)
 
-# Create a configured "SessionLocal" class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
-def get_session() -> Generator:
+def get_session() -> Generator[Session, None, None]:
     """Dependency to get a database session."""
-    session = SessionLocal()
-    try:
+    with Session(engine) as session:
         yield session
-    finally:
-        session.close()
 
 
 def create_db_and_tables():

@@ -1,5 +1,5 @@
 from mcp.server import Server
-from mcp.types import Tool, ArgumentsSchema
+from mcp.types import Tool
 from pydantic import BaseModel
 from typing import Dict, Any
 from sqlmodel import Session
@@ -33,7 +33,10 @@ async def add_task_tool(arguments: AddTaskArguments) -> Dict[str, Any]:
         description=arguments.description or None
     )
 
-    # Create task in database
+        # Create task in database
+    from src.mcp_server.models.database import create_db_and_tables
+    create_db_and_tables()  # Ensure tables exist
+
     with next(get_session()) as session:
         try:
             task = TaskService.create_task(session, task_data)
