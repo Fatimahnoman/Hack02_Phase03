@@ -17,7 +17,7 @@ class TaskBase(SQLModel):
 class Task(TaskBase, table=True):
     """Task model representing a specific work item that can be created, updated, or managed through natural language commands."""
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()).replace('-', ''), primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = Field(default=None)
@@ -40,7 +40,13 @@ class TaskUpdate(SQLModel):
 class TaskRead(TaskBase):
     """Schema for reading task data."""
 
-    id: uuid.UUID
+    id: str
     created_at: datetime
     updated_at: datetime
     completed_at: Optional[datetime]
+
+
+class TaskStatusUpdate(SQLModel):
+    """Schema for updating task status."""
+
+    completed: bool

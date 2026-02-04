@@ -5,6 +5,7 @@ from ..core.database import get_session_context
 from ..models.user import User
 from ..services.agent_service import AgentService
 from ..services.conversation_service import ConversationService
+from ..services.auth_service import get_current_user
 from pydantic import BaseModel
 from uuid import UUID
 import json
@@ -30,6 +31,7 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(
     request: ChatRequest,
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session_context)
 ) -> ChatResponse:
     """
@@ -53,7 +55,7 @@ async def chat_endpoint(
             # Create a new conversation
             from ..models.conversation import ConversationCreate
             conversation_data = ConversationCreate(conversation_metadata={})
-            conversation = conversation_service.create_conversation(conversation_data)
+            conversation = conversation_service.create_conversation(conversation_data, str(current_user.id))
             conversation_id = conversation.id
 
         # Get conversation history for agent context
@@ -74,6 +76,9 @@ async def chat_endpoint(
         # Process the request through the agent
         result = agent_service.process_request(request.message, history_for_agent)
 
+        # Explicitly commit any changes made by tools before continuing
+        session.commit()
+
         # Add user message to conversation
         from ..models.message import MessageCreate, MessageRole
         user_message = MessageCreate(
@@ -90,6 +95,9 @@ async def chat_endpoint(
             content=result.get("response", "")
         )
         conversation_service.add_message(assistant_message)
+
+        # Commit the conversation messages
+        session.commit()
 
         # Import datetime for timestamp
         from datetime import datetime

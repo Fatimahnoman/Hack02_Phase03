@@ -4,11 +4,12 @@ import TodoForm from '../components/todos/TodoForm';
 import TodoList from '../components/todos/TodoList';
 import MenuActionsPanel from '../components/todos/MenuActionsPanel';
 import { Todo, TodoCreate, TodoUpdate } from '../types';
-import { todoAPI } from '../services/api';
+import { todoAPI, taskAPI, Task } from '../services/api';
 import { useRouter } from 'next/router';
 
 const DashboardPage = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<boolean>(false);
@@ -23,12 +24,27 @@ const DashboardPage = () => {
       return;
     }
 
-    const fetchTodos = async () => {
+    const fetchData = async () => {
       try {
-        const response = await todoAPI.getAll();
-        setTodos(response.data);
+        // Fetch traditional todos
+        try {
+          const todosResponse = await todoAPI.getAll();
+          setTodos(Array.isArray(todosResponse.data) ? todosResponse.data : []);
+        } catch (error) {
+          console.error('Error fetching todos:', error);
+          // Don't fail completely if one fails
+        }
+
+        // Fetch AI-managed tasks
+        try {
+          const tasksResponse = await taskAPI.getAll();
+          setTasks(Array.isArray(tasksResponse.data) ? tasksResponse.data : []);
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+          // Don't fail completely if one fails
+        }
       } catch (error) {
-        console.error('Error fetching todos:', error);
+        console.error('Error fetching data:', error);
         // Redirect to sign in if unauthorized
         if ((error as any).response?.status === 401) {
           alert('Signin First then you\'ll able to see the Dashboard');
@@ -39,7 +55,7 @@ const DashboardPage = () => {
       }
     };
 
-    fetchTodos();
+    fetchData();
   }, [router]);
 
   const handleAddTodo = async (todoData: TodoCreate) => {
@@ -55,59 +71,157 @@ const DashboardPage = () => {
       }, 3000);
     } catch (error) {
       console.error('Error creating todo:', error);
+      // Show error message to user
+      if (error instanceof Error) {
+        alert(`Failed to add task: ${error.message}`);
+      } else {
+        alert('Failed to add task: Unknown error occurred');
+      }
     }
   };
 
-  const handleToggleTodo = async (id: number, completed: boolean) => {
-    try {
-      const response = await todoAPI.toggleComplete(id, completed);
-      setTodos(todos.map(todo =>
-        todo.id === id ? { ...todo, completed: response.data.completed } : todo
-      ));
-      const message = completed
-        ? 'Task Marked as Complete Successfully'
-        : 'Task Marked as Incomplete Successfully';
-      setSuccessMessage(message);
-      // Clear the message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-    } catch (error) {
-      console.error('Error toggling todo:', error);
+  const handleToggleTodo = async (id: number | string, completed: boolean) => {
+    // Check if the ID is a string (meaning it's a task) or number (meaning it's a todo)
+    if (typeof id === 'string') {
+      // It's a task, handle with taskAPI
+      try {
+        const response = await taskAPI.toggleComplete(id);
+        setTasks(tasks.map(task =>
+          task.id === id ? response.data : task
+        ));
+        setSuccessMessage('Task Marked as Complete Successfully');
+        // Clear the message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } catch (error) {
+        console.error('Error toggling task:', error);
+        if (error instanceof Error) {
+          alert(`Failed to update task status: ${error.message}`);
+        } else {
+          alert('Failed to update task status: Unknown error occurred');
+        }
+      }
+    } else {
+      // It's a todo, handle with todoAPI
+      try {
+        const response = await todoAPI.toggleComplete(id, completed);
+        setTodos(todos.map(todo =>
+          todo.id === id ? { ...todo, completed: response.data.completed } : todo
+        ));
+        const message = completed
+          ? 'Task Marked as Complete Successfully'
+          : 'Task Marked as Incomplete Successfully';
+        setSuccessMessage(message);
+        // Clear the message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } catch (error) {
+        console.error('Error toggling todo:', error);
+        // Show error message to user
+        if (error instanceof Error) {
+          alert(`Failed to update task status: ${error.message}`);
+        } else {
+          alert('Failed to update task status: Unknown error occurred');
+        }
+      }
     }
   };
 
-  const handleUpdateTodo = async (id: number, updates: TodoUpdate) => {
-    try {
-      const response = await todoAPI.update(id, updates);
-      setTodos(todos.map(todo =>
-        todo.id === id ? response.data : todo
-      ));
-      setViewMode(false); // Reset view mode to show the form again
-      setShowAddForm(false); // Hide the form if it was shown
-      setSuccessMessage('Task Updated Successfully in Todo List');
-      // Clear the message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-    } catch (error) {
-      console.error('Error updating todo:', error);
+  const handleUpdateTodo = async (id: number | string, updates: TodoUpdate) => {
+    // Check if the ID is a string (meaning it's a task) or number (meaning it's a todo)
+    if (typeof id === 'string') {
+      // It's a task, handle with taskAPI
+      try {
+        const response = await taskAPI.update(id, updates);
+        setTasks(tasks.map(task =>
+          task.id === id ? response.data : task
+        ));
+        setViewMode(false); // Reset view mode to show the form again
+        setShowAddForm(false); // Hide the form if it was shown
+        setSuccessMessage('Task Updated Successfully');
+        // Clear the message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } catch (error) {
+        console.error('Error updating task:', error);
+        if (error instanceof Error) {
+          alert(`Failed to update task: ${error.message}`);
+        } else {
+          alert('Failed to update task: Unknown error occurred');
+        }
+      }
+    } else {
+      // It's a todo, handle with todoAPI
+      try {
+        const response = await todoAPI.update(id, updates);
+        setTodos(todos.map(todo =>
+          todo.id === id ? response.data : todo
+        ));
+        setViewMode(false); // Reset view mode to show the form again
+        setShowAddForm(false); // Hide the form if it was shown
+        setSuccessMessage('Task Updated Successfully in Todo List');
+        // Clear the message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } catch (error) {
+        console.error('Error updating todo:', error);
+        // Show error message to user
+        if (error instanceof Error) {
+          alert(`Failed to update task: ${error.message}`);
+        } else {
+          alert('Failed to update task: Unknown error occurred');
+        }
+      }
     }
   };
 
-  const handleDeleteTodo = async (id: number) => {
-    try {
-      await todoAPI.delete(id);
-      setTodos(todos.filter(todo => todo.id !== id));
-      setViewMode(false); // Reset view mode to show the form again
-      setShowAddForm(false); // Hide the form if it was shown
-      setSuccessMessage('Task Deleted Successfully from Todo List');
-      // Clear the message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-    } catch (error) {
-      console.error('Error deleting todo:', error);
+  const handleDeleteTodo = async (id: number | string) => {
+    // Check if the ID is a string (meaning it's a task) or number (meaning it's a todo)
+    if (typeof id === 'string') {
+      // It's a task, handle with taskAPI
+      try {
+        await taskAPI.delete(id);
+        setTasks(tasks.filter(task => task.id !== id));
+        setViewMode(false); // Reset view mode to show the form again
+        setShowAddForm(false); // Hide the form if it was shown
+        setSuccessMessage('Task Deleted Successfully');
+        // Clear the message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } catch (error) {
+        console.error('Error deleting task:', error);
+        if (error instanceof Error) {
+          alert(`Failed to delete task: ${error.message}`);
+        } else {
+          alert('Failed to delete task: Unknown error occurred');
+        }
+      }
+    } else {
+      // It's a todo, handle with todoAPI
+      try {
+        await todoAPI.delete(id);
+        setTodos(todos.filter(todo => todo.id !== id));
+        setViewMode(false); // Reset view mode to show the form again
+        setShowAddForm(false); // Hide the form if it was shown
+        setSuccessMessage('Task Deleted Successfully from Todo List');
+        // Clear the message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } catch (error) {
+        console.error('Error deleting todo:', error);
+        // Show error message to user
+        if (error instanceof Error) {
+          alert(`Failed to delete task: ${error.message}`);
+        } else {
+          alert('Failed to delete task: Unknown error occurred');
+        }
+      }
     }
   };
 
@@ -148,7 +262,24 @@ const DashboardPage = () => {
         </div>
 
         <MenuActionsPanel
-          todos={todos}
+          todos={[
+            ...todos.map(todo => ({
+              ...todo,
+              type: 'todo' as const,
+              originalId: todo.id
+            })),
+            ...tasks.map(task => ({
+              id: parseInt(task.id) || 0, // Convert string ID to number for compatibility
+              title: task.title,
+              description: task.description || '',
+              completed: task.status === 'completed',
+              created_at: task.created_at,
+              updated_at: task.updated_at,
+              user_id: 0, // Placeholder for compatibility
+              type: 'task' as const,
+              originalId: task.id
+            }))
+          ]}
           onAddTodo={handleAddTodo}
           onToggleTodo={handleToggleTodo}
           onUpdateTodo={handleUpdateTodo}
@@ -168,7 +299,24 @@ const DashboardPage = () => {
         {showAddForm && <TodoForm onSubmit={handleAddTodo} />}
 
         <TodoList
-          todos={todos}
+          todos={[
+            ...todos.map(todo => ({
+              ...todo,
+              type: 'todo' as const,
+              originalId: todo.id
+            })),
+            ...tasks.map(task => ({
+              id: parseInt(task.id) || 0, // Convert string ID to number for compatibility
+              title: task.title,
+              description: task.description || '',
+              completed: task.status === 'completed',
+              created_at: task.created_at,
+              updated_at: task.updated_at,
+              user_id: 0, // Placeholder for compatibility
+              type: 'task' as const,
+              originalId: task.id
+            }))
+          ]}
           onToggle={handleToggleTodo}
           onUpdate={handleUpdateTodo}
           onDelete={handleDeleteTodo}

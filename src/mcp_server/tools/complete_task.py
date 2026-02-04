@@ -6,12 +6,14 @@ from sqlmodel import Session
 import uuid
 
 from src.mcp_server.models.database import get_session
-from src.mcp_server.services.task_service import TaskService
+from backend.src.core.database import get_session_context  # Use backend's database session
+from backend.src.services.todo_service import toggle_todo_completion
 from src.mcp_server.utils.validators import validate_task_id
 
 
 class CompleteTaskArguments(BaseModel):
-    task_id: str
+    task_id: str = None
+    title: str = None
 
 
 async def complete_task_tool(arguments: CompleteTaskArguments) -> Dict[str, Any]:
@@ -21,24 +23,34 @@ async def complete_task_tool(arguments: CompleteTaskArguments) -> Dict[str, Any]
     if not is_valid:
         return {"success": False, "message": error_msg}
 
-    with next(get_session()) as session:
+    try:
+        # Get backend session
+        backend_session_gen = get_session_context()
+        session = next(backend_session_gen)
+
         try:
-            completed_task = TaskService.complete_task(session, uuid.UUID(arguments.task_id))
-            if not completed_task:
+            # Complete the todo (using default user ID 1)
+            user_id = 1  # Default user ID
+            updated_todo = toggle_todo_completion(session, int(arguments.task_id), True, user_id)
+
+            if not updated_todo:
                 return {"success": False, "message": f"Task with ID {arguments.task_id} not found"}
+
+            session.commit()  # Commit the transaction
 
             return {
                 "success": True,
                 "task": {
-                    "id": str(completed_task.id),
-                    "title": completed_task.title,
-                    "description": completed_task.description,
-                    "status": completed_task.status,
-                    "created_at": completed_task.created_at.isoformat(),
-                    "updated_at": completed_task.updated_at.isoformat(),
-                    "completed_at": completed_task.completed_at.isoformat() if completed_task.completed_at else None
+                    "id": updated_todo.id,  # Todo ID is integer
+                    "title": updated_todo.title,
+                    "description": updated_todo.description,
+                    "completed": updated_todo.completed,
+                    "created_at": updated_todo.created_at.isoformat(),
+                    "updated_at": updated_todo.updated_at.isoformat()
                 },
                 "message": "Task marked as completed successfully"
             }
-        except Exception as e:
-            return {"success": False, "message": f"Failed to complete task: {str(e)}"}
+        finally:
+            session.close()
+    except Exception as e:
+        return {"success": False, "message": f"Failed to complete task: {str(e)}"}

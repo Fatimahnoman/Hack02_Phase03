@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import { Todo, TodoUpdate } from '../../types';
+import { Task, TaskUpdate } from '../../services/api';
 import { useRouter } from 'next/router';
 
+// Define a unified interface for both todos and tasks
+interface UnifiedItem extends Todo {
+  type?: 'todo' | 'task';
+  originalId: string | number;
+}
+
 interface MenuActionsPanelProps {
-  todos: Todo[];
+  todos: UnifiedItem[];
   onAddTodo: (todoData: any) => void;
-  onToggleTodo: (id: number, completed: boolean) => void;
-  onUpdateTodo: (id: number, updates: TodoUpdate) => void;
-  onDeleteTodo: (id: number) => void;
+  onToggleTodo: (id: string | number, completed: boolean) => void;
+  onUpdateTodo: (id: string | number, updates: TodoUpdate | TaskUpdate) => void;
+  onDeleteTodo: (id: string | number) => void;
   onSetViewMode?: (viewMode: boolean) => void;
   onSetShowAddForm?: (show: boolean) => void;
 }
@@ -24,7 +31,7 @@ const MenuActionsPanel = ({
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
-  const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
+  const [selectedTodoId, setSelectedTodoId] = useState<string | number | null>(null);
   const [newTodoTitle, setNewTodoTitle] = useState('');
   const [newTodoDescription, setNewTodoDescription] = useState('');
   const [newTodoDueDate, setNewTodoDueDate] = useState('');
@@ -47,6 +54,9 @@ const MenuActionsPanel = ({
 
     // If the action is 'add', we should show the add form
     if (action === 'add') {
+      if (onSetViewMode) {
+        onSetViewMode(false); // Make sure we're in add mode, not view mode
+      }
       if (onSetShowAddForm) {
         onSetShowAddForm(true);
       }
@@ -68,7 +78,7 @@ const MenuActionsPanel = ({
     }
   };
 
-  const handleTaskSelection = (id: number) => {
+  const handleTaskSelection = (id: string | number) => {
     setSelectedTodoId(id);
   };
 
@@ -78,16 +88,17 @@ const MenuActionsPanel = ({
     switch (selectedAction) {
       case 'add':
         if (newTodoTitle.trim()) {
+          // Call the onAddTodo function passed from the dashboard
           onAddTodo({
             title: newTodoTitle,
             description: newTodoDescription,
             due_date: newTodoDueDate || undefined
           });
+          // Clear the form fields
           setNewTodoTitle('');
           setNewTodoDescription('');
           setNewTodoDueDate('');
-          // Show success message (the main success message is handled in dashboard)
-          // Also close the menu after adding
+          // Close the menu after adding
           setShowMenu(false);
           setSelectedAction(null);
         } else {
@@ -98,6 +109,7 @@ const MenuActionsPanel = ({
 
       case 'update':
         if (selectedTodoId !== null) {
+          // For update, we need to check if this is a task or todo
           onUpdateTodo(selectedTodoId, {
             title: newTodoTitle || undefined,
             description: newTodoDescription || undefined,
@@ -262,12 +274,17 @@ const MenuActionsPanel = ({
                   <label>Select a task:</label>
                   <select
                     value={selectedTodoId || ''}
-                    onChange={(e) => handleTaskSelection(Number(e.target.value))}
+                    onChange={(e) => {
+                      // Check if the value is a number or string to determine the type
+                      const value = e.target.value;
+                      const parsedValue = Number(value);
+                      handleTaskSelection(isNaN(parsedValue) ? value : parsedValue);
+                    }}
                     className="task-select"
                   >
                     <option value="">Choose a task...</option>
                     {todos.map(todo => (
-                      <option key={todo.id} value={todo.id}>
+                      <option key={todo.originalId || todo.id} value={todo.originalId || todo.id}>
                         {todo.title}
                       </option>
                     ))}

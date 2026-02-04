@@ -22,6 +22,12 @@ class TaskService:
         return session.exec(statement).first()
 
     @staticmethod
+    def get_task_by_title(session: Session, title: str) -> Optional[Task]:
+        """Get a task by its title."""
+        statement = select(Task).where(Task.title == title)
+        return session.exec(statement).first()
+
+    @staticmethod
     def get_all_tasks(
         session: Session,
         status_filter: Optional[str] = None,

@@ -36,5 +36,12 @@ def get_session() -> Generator[Session, None, None]:
 
 def get_session_context():
     """Dependency injection for FastAPI to provide database session."""
-    with get_session() as session:
+    session = Session(engine)
+    try:
         yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()

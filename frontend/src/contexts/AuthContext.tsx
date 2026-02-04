@@ -26,7 +26,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const token = localStorage.getItem('access_token');
     if (token && authAPI.isAuthenticated()) {
       // In a real app, you would fetch user details here
-      // For now, we'll just set isAuthenticated to true
+      // For now, we'll simulate restoring user data from token
+      // We'll use a dummy user since we don't have a user profile endpoint
+      const email = localStorage.getItem('user_email') || 'user@example.com'; // Store email when logging in
+      setUser({
+        id: 1,
+        email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     }
     setLoading(false);
   }, []);
@@ -37,6 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { access_token } = response.data;
 
       localStorage.setItem('access_token', access_token);
+      localStorage.setItem('user_email', email); // Store email for restoration
 
       // In a real app, you would fetch user details here
       // For now, we'll just set a dummy user
@@ -53,6 +62,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { access_token } = response.data;
 
       localStorage.setItem('access_token', access_token);
+      localStorage.setItem('user_email', email); // Store email for restoration
 
       // In a real app, you would fetch user details here
       // For now, we'll just set a dummy user

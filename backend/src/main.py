@@ -5,6 +5,8 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from .api.chat_endpoint import router as chat_router
 from .api.auth_router import router as auth_router
+from .api.todo_router import router as todo_router
+from .api.task_router import router as task_router
 from .core.database import init_db
 from .models import *  # Import all models to register them with SQLModel
 from .core.config import settings
@@ -52,6 +54,8 @@ app.add_middleware(
 # Include routers
 app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(todo_router, prefix="/api/todos", tags=["todos"])
+app.include_router(task_router, prefix="/api", tags=["tasks"])
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

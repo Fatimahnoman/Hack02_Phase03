@@ -11,11 +11,20 @@ const SigninForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(''); // Clear previous errors
+
     try {
       await login(email, password);
       router.push('/dashboard');
-    } catch (err) {
-      setError('Your password or email is Wrong');
+    } catch (err: any) {
+      // Extract error message from server response if available
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (err.response?.status === 401) {
+        setError('Incorrect email or password. Please try again.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
       console.error('Login error:', err);
     }
   };

@@ -12,9 +12,10 @@ class ConversationService:
     def __init__(self, session: Session):
         self.session = session
 
-    def create_conversation(self, conversation_data: ConversationCreate) -> Conversation:
+    def create_conversation(self, conversation_data: ConversationCreate, user_id: str) -> Conversation:
         """Create a new conversation."""
         conversation = Conversation(
+            user_id=user_id,
             conversation_metadata=conversation_data.conversation_metadata
         )
         self.session.add(conversation)

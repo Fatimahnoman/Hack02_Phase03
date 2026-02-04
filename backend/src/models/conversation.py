@@ -9,6 +9,7 @@ class Conversation(SQLModel, table=True):
     """Conversation model representing a sequence of messages between a user and the agent, stored in the database with timestamps and metadata."""
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: str = Field(sa_column=Column(String, nullable=False))
     conversation_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

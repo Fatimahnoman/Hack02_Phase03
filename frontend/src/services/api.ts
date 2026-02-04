@@ -75,4 +75,51 @@ export const todoAPI = {
     api.get(`/api/todos/${id}`)
 };
 
+// Define the Task type to match the backend Task model
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface TaskCreate {
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+}
+
+export interface TaskUpdate {
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+}
+
+// Task API calls
+export const taskAPI = {
+  getAll: (): Promise<AxiosResponse<Task[]>> =>
+    api.get('/api/tasks/'),
+
+  create: (task: TaskCreate): Promise<AxiosResponse<Task>> =>
+    api.post('/api/tasks/', task),
+
+  update: (id: string, task: TaskUpdate): Promise<AxiosResponse<Task>> =>
+    api.put(`/api/tasks/${id}`, task),
+
+  delete: (id: string): Promise<AxiosResponse<void>> =>
+    api.delete(`/api/tasks/${id}`),
+
+  toggleComplete: (id: string): Promise<AxiosResponse<Task>> =>
+    api.patch(`/api/tasks/${id}/complete`),
+
+  getById: (id: string): Promise<AxiosResponse<Task>> =>
+    api.get(`/api/tasks/${id}`)
+};
+
 export default api;

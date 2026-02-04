@@ -16,7 +16,11 @@ from ..services.auth_service import (
 router = APIRouter()
 security = HTTPBearer()
 
-@router.post("/register", response_model=UserRead)
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+@router.post("/register", response_model=AuthResponse)
 def register(user: UserCreate, session: Session = Depends(get_session_context)):
     try:
         # Check if user already exists
@@ -29,7 +33,14 @@ def register(user: UserCreate, session: Session = Depends(get_session_context)):
 
         # Create new user
         db_user = create_user(session, user)
-        return db_user
+        
+        # Generate access token for auto-login after registration
+        access_token_expires = timedelta(minutes=30)
+        access_token = create_access_token(
+            data={"sub": db_user.email}, expires_delta=access_token_expires
+        )
+        
+        return {"access_token": access_token, "token_type": "bearer"}
     except HTTPException:
         # Re-raise HTTP exceptions as-is to preserve the intended behavior
         raise

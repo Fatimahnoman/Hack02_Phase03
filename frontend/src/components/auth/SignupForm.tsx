@@ -11,11 +11,20 @@ const SignupForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(''); // Clear previous errors
+
     try {
       await register(email, password);
       router.push('/dashboard');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+    } catch (err: any) {
+      // Extract error message from server response if available
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (err.response?.status === 400) {
+        setError('Email already registered. Please try logging in instead.');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
       console.error('Registration error:', err);
     }
   };

@@ -30,8 +30,8 @@ class MCPTaskToolRegistry:
             task = Task(**task_create.dict())
 
             self.session.add(task)
-            self.session.commit()
-            self.session.refresh(task)
+            self.session.flush()  # Flush to assign ID without committing yet
+            task_id = task.id  # Store the ID before committing
 
             # Log the tool call
             tool_call = ToolCall(
@@ -43,7 +43,10 @@ class MCPTaskToolRegistry:
                 entity_type="Task"
             )
             self.session.add(tool_call)
+
+            # Now commit everything together
             self.session.commit()
+            self.session.refresh(task)
 
             return {
                 "id": str(task.id),
@@ -86,6 +89,7 @@ class MCPTaskToolRegistry:
             )
             self.session.add(tool_call)
             self.session.commit()
+            self.session.flush()
 
             return [
                 {
@@ -111,14 +115,28 @@ class MCPTaskToolRegistry:
 
             raise e
 
-    def update_task(self, task_id: str, title: Optional[str] = None, description: Optional[str] = None,
+    def update_task(self, task_id: str = None, title: Optional[str] = None, description: Optional[str] = None,
                    status: Optional[str] = None, priority: Optional[str] = None) -> Dict[str, Any]:
         """Update an existing task."""
         try:
-            task_uuid = UUID(task_id)
-            task = self.session.get(Task, task_uuid)
+            # Find the task - either by ID or by title
+            task = None
+
+            if task_id:
+                try:
+                    task_uuid = UUID(task_id)
+                    task = self.session.get(Task, task_uuid)
+                except ValueError:
+                    # If task_id is not a valid UUID, treat it as a title
+                    statement = select(Task).where(Task.title == task_id)
+                    task = self.session.exec(statement).first()
+            elif title:
+                # Find by title if no ID provided
+                statement = select(Task).where(Task.title == title)
+                task = self.session.exec(statement).first()
+
             if not task:
-                raise ValueError(f"Task with ID {task_id} not found")
+                raise ValueError("Task not found")
 
             # Update task fields
             if title is not None:
@@ -139,7 +157,7 @@ class MCPTaskToolRegistry:
             # Log the tool call
             tool_call = ToolCall(
                 function_name="update_task",
-                parameters={"task_id": task_id, "title": title, "description": description, "status": status, "priority": priority},
+                parameters={"task_id": str(task.id) if task else task_id, "title": title, "description": description, "status": status, "priority": priority},
                 result={"id": str(task.id), "title": task.title, "status": task.status},
                 status="success",
                 entity_id=task.id,
@@ -147,6 +165,7 @@ class MCPTaskToolRegistry:
             )
             self.session.add(tool_call)
             self.session.commit()
+            self.session.flush()
 
             return {
                 "id": str(task.id),
@@ -169,13 +188,27 @@ class MCPTaskToolRegistry:
 
             raise e
 
-    def complete_task(self, task_id: str) -> Dict[str, Any]:
+    def complete_task(self, task_id: str = None, title: Optional[str] = None) -> Dict[str, Any]:
         """Mark a task as completed."""
         try:
-            task_uuid = UUID(task_id)
-            task = self.session.get(Task, task_uuid)
+            # Find the task - either by ID or by title
+            task = None
+
+            if task_id:
+                try:
+                    task_uuid = UUID(task_id)
+                    task = self.session.get(Task, task_uuid)
+                except ValueError:
+                    # If task_id is not a valid UUID, treat it as a title
+                    statement = select(Task).where(Task.title == task_id)
+                    task = self.session.exec(statement).first()
+            elif title:
+                # Find by title if no ID provided
+                statement = select(Task).where(Task.title == title)
+                task = self.session.exec(statement).first()
+
             if not task:
-                raise ValueError(f"Task with ID {task_id} not found")
+                raise ValueError("Task not found")
 
             task.status = "completed"
             task.completed_at = datetime.utcnow()
@@ -188,7 +221,7 @@ class MCPTaskToolRegistry:
             # Log the tool call
             tool_call = ToolCall(
                 function_name="complete_task",
-                parameters={"task_id": task_id},
+                parameters={"task_id": str(task.id) if task else task_id, "title": title},
                 result={"id": str(task.id), "title": task.title, "status": task.status},
                 status="success",
                 entity_id=task.id,
@@ -196,6 +229,7 @@ class MCPTaskToolRegistry:
             )
             self.session.add(tool_call)
             self.session.commit()
+            self.session.flush()
 
             return {
                 "id": str(task.id),
@@ -216,18 +250,32 @@ class MCPTaskToolRegistry:
 
             raise e
 
-    def delete_task(self, task_id: str) -> Dict[str, Any]:
+    def delete_task(self, task_id: str = None, title: Optional[str] = None) -> Dict[str, Any]:
         """Delete a task."""
         try:
-            task_uuid = UUID(task_id)
-            task = self.session.get(Task, task_uuid)
+            # Find the task - either by ID or by title
+            task = None
+
+            if task_id:
+                try:
+                    task_uuid = UUID(task_id)
+                    task = self.session.get(Task, task_uuid)
+                except ValueError:
+                    # If task_id is not a valid UUID, treat it as a title
+                    statement = select(Task).where(Task.title == task_id)
+                    task = self.session.exec(statement).first()
+            elif title:
+                # Find by title if no ID provided
+                statement = select(Task).where(Task.title == title)
+                task = self.session.exec(statement).first()
+
             if not task:
-                raise ValueError(f"Task with ID {task_id} not found")
+                raise ValueError("Task not found")
 
             # Log the tool call before deletion
             tool_call = ToolCall(
                 function_name="delete_task",
-                parameters={"task_id": task_id},
+                parameters={"task_id": str(task.id) if task else task_id, "title": title},
                 result={"id": str(task.id), "title": task.title, "status": task.status},
                 status="success",
                 entity_id=task.id,
@@ -237,6 +285,7 @@ class MCPTaskToolRegistry:
 
             self.session.delete(task)
             self.session.commit()
+            self.session.flush()
 
             return {
                 "id": str(task.id),

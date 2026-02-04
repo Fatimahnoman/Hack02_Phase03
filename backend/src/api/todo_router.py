@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel import Session
 from typing import List
 from pydantic import BaseModel
-from ..database.database import get_session
+from ..core.database import get_session_context
 from ..models.todo import Todo, TodoCreate, TodoRead, TodoUpdate
 from ..models.user import User
 from ..services.auth_service import get_current_user
@@ -23,7 +23,7 @@ class TodoStatusUpdate(BaseModel):
 @router.post("/", response_model=TodoRead)
 def create_todo_endpoint(
     todo: TodoCreate,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_context),
     current_user: User = Depends(get_current_user)
 ):
     # Create a new todo associated with the current user
@@ -31,7 +31,7 @@ def create_todo_endpoint(
 
 @router.get("/", response_model=List[TodoRead])
 def read_todos(
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_context),
     current_user: User = Depends(get_current_user)
 ):
     # Get all todos for the current user
@@ -40,7 +40,7 @@ def read_todos(
 @router.get("/{todo_id}", response_model=TodoRead)
 def read_todo(
     todo_id: int,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_context),
     current_user: User = Depends(get_current_user)
 ):
     # Get a specific todo for the current user
@@ -53,7 +53,7 @@ def read_todo(
 def update_todo_endpoint(
     todo_id: int,
     todo: TodoUpdate,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_context),
     current_user: User = Depends(get_current_user)
 ):
     # Update a specific todo for the current user
@@ -65,7 +65,7 @@ def update_todo_endpoint(
 @router.delete("/{todo_id}")
 def delete_todo_endpoint(
     todo_id: int,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_context),
     current_user: User = Depends(get_current_user)
 ):
     # Delete a specific todo for the current user
@@ -78,7 +78,7 @@ def delete_todo_endpoint(
 def update_todo_status(
     todo_id: int,
     status_update: TodoStatusUpdate,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_context),
     current_user: User = Depends(get_current_user)
 ):
     # Update the completion status of a specific todo

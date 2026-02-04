@@ -90,7 +90,7 @@ class AgentService:
                     "properties": {
                         "task_id": {
                             "type": "string",
-                            "description": "The ID of the task to update"
+                            "description": "The ID of the task to update (can be the task title if ID is unknown)"
                         },
                         "title": {
                             "type": "string",
@@ -126,7 +126,7 @@ class AgentService:
                     "properties": {
                         "task_id": {
                             "type": "string",
-                            "description": "The ID of the task to complete"
+                            "description": "The ID of the task to complete (can be the task title if ID is unknown)"
                         }
                     },
                     "required": ["task_id"]
@@ -144,7 +144,7 @@ class AgentService:
                     "properties": {
                         "task_id": {
                             "type": "string",
-                            "description": "The ID of the task to delete"
+                            "description": "The ID of the task to delete (can be the task title if ID is unknown)"
                         }
                     },
                     "required": ["task_id"]
@@ -229,6 +229,9 @@ class AgentService:
                         # Execute the function
                         try:
                             function_response = function_to_call(**function_args)
+
+                            # Explicitly commit the session after successful tool execution
+                            self.session.commit()
 
                             # Add the tool response to the messages for the agent
                             # This follows the protocol: tool response comes after assistant with tool_calls

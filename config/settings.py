@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
     # Database settings
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./test.db")  # Default to SQLite for testing
+    database_url: str = os.getenv("DATABASE_URL", f"sqlite:///E:/Hackathon_Two/Phase_03/test.db")  # Use the same database as backend
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "5"))
     db_pool_timeout: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
 

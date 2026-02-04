@@ -1,18 +1,25 @@
 import React from 'react';
 import { Todo, TodoUpdate } from '../../types';
+import { Task, TaskUpdate } from '../../services/api';
 import TodoItem from './TodoItem';
 
+// Define a unified interface for both todos and tasks
+interface UnifiedItem extends Todo {
+  type: 'todo' | 'task';
+  originalId: string | number;
+}
+
 interface TodoListProps {
-  todos: Todo[];
-  onToggle: (id: number, completed: boolean) => void;
-  onUpdate: (id: number, updates: TodoUpdate) => void;
-  onDelete: (id: number) => void;
+  todos: UnifiedItem[];
+  onToggle: (id: string | number, completed: boolean) => void;
+  onUpdate: (id: string | number, updates: TodoUpdate | TaskUpdate) => void;
+  onDelete: (id: string | number) => void;
   emptyState?: React.ReactNode;
 }
 
 const TodoList = ({ todos, onToggle, onUpdate, onDelete, emptyState }: TodoListProps) => {
   if (todos.length === 0) {
-    return emptyState || <div className="empty-state">No todos yet. Add one to get started!</div>;
+    return emptyState || <div className="empty-state">No tasks yet. Add one to get started!</div>;
   }
 
   return (
@@ -22,13 +29,16 @@ const TodoList = ({ todos, onToggle, onUpdate, onDelete, emptyState }: TodoListP
         <span className="task-count">{todos.length} {todos.length === 1 ? 'task' : 'tasks'}</span>
       </div>
 
-      {todos.map((todo) => (
+      {todos.map((item) => (
         <TodoItem
-          key={todo.id}
-          todo={todo}
-          onToggle={onToggle}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
+          key={item.originalId}
+          todo={{
+            ...item,
+            id: typeof item.id === 'number' ? item.id : parseInt(item.id) || 0
+          }}
+          onToggle={(id, completed) => onToggle(item.originalId, completed)}
+          onUpdate={(id, updates) => onUpdate(item.originalId, updates)}
+          onDelete={(id) => onDelete(item.originalId)}
         />
       ))}
 

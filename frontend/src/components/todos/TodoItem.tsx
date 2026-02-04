@@ -1,12 +1,21 @@
 import React from 'react';
 import { Todo, TodoUpdate } from '../../types';
-import { todoAPI } from '../../services/api';
+import { Task, TaskUpdate } from '../../services/api';
+
+// Define a unified interface for both todos and tasks
+interface UnifiedItem extends Todo {
+  type?: 'todo' | 'task';
+  originalId: string | number;
+  created_at?: string;
+  updated_at?: string;
+  completed_at?: string | null;
+}
 
 interface TodoItemProps {
-  todo: Todo;
-  onToggle: (id: number, completed: boolean) => void;
-  onUpdate: (id: number, updates: TodoUpdate) => void;
-  onDelete: (id: number) => void;
+  todo: UnifiedItem;
+  onToggle: (id: string | number, completed: boolean) => void;
+  onUpdate: (id: string | number, updates: TodoUpdate | TaskUpdate) => void;
+  onDelete: (id: string | number) => void;
 }
 
 const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
@@ -16,8 +25,11 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
   const [editDueDate, setEditDueDate] = React.useState(todo.due_date || '');
   const [editCompleted, setEditCompleted] = React.useState(todo.completed);
 
+  // Determine the actual ID to use based on the item type
+  const actualId = todo.originalId !== undefined ? todo.originalId : todo.id;
+
   const handleToggle = () => {
-    onToggle(todo.id, !todo.completed);
+    onToggle(actualId, !todo.completed);
   };
 
   const handleEdit = () => {
@@ -29,12 +41,23 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
   };
 
   const handleSave = () => {
-    onUpdate(todo.id, {
-      title: editTitle,
-      description: editDescription,
-      due_date: editDueDate || undefined,
-      completed: editCompleted
-    });
+    // Determine if this is a TodoUpdate or TaskUpdate based on the item type
+    if (todo.type === 'task') {
+      // For tasks, we'll use TaskUpdate format
+      onUpdate(actualId, {
+        title: editTitle,
+        description: editDescription,
+        status: editCompleted ? 'completed' : 'pending'
+      });
+    } else {
+      // For todos, use TodoUpdate format
+      onUpdate(actualId, {
+        title: editTitle,
+        description: editDescription,
+        due_date: editDueDate || undefined,
+        completed: editCompleted
+      });
+    }
     setIsEditing(false);
   };
 
@@ -47,7 +70,7 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
   };
 
   const handleDelete = () => {
-    onDelete(todo.id);
+    onDelete(actualId);
   };
 
   return (
@@ -101,11 +124,17 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
                 {todo.description && (
                   <p className={`todo-description ${todo.completed ? 'completed' : ''}`}>{todo.description}</p>
                 )}
-                {todo.due_date && (
+                {(todo.due_date || todo.created_at) && (
                   <div className="todo-meta">
-                    <span className={`todo-due-date ${todo.completed ? 'completed' : ''}`}>
-                      📅 {new Date(todo.due_date).toLocaleDateString()}
-                    </span>
+                    {todo.due_date ? (
+                      <span className={`todo-due-date ${todo.completed ? 'completed' : ''}`}>
+                        📅 {new Date(todo.due_date).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span className={`todo-created ${todo.completed ? 'completed' : ''}`}>
+                        📅 Created: {todo.created_at ? new Date(todo.created_at).toLocaleDateString() : ''}
+                      </span>
+                    )}
                     {todo.completed && (
                       <span className="todo-completed-badge">✓ Completed</span>
                     )}
@@ -272,6 +301,18 @@ const TodoItem = ({ todo, onToggle, onUpdate, onDelete }: TodoItemProps) => {
 
         .todo-due-date.completed {
           background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .todo-created {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+          color: #2d3748;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 600;
         }
 
         .todo-completed-badge {

@@ -5,6 +5,11 @@ from pydantic import BaseModel
 from typing import Dict, Any
 import json
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
 
 from config.settings import settings
 from src.mcp_server.models.database import get_session, create_db_and_tables
@@ -73,63 +78,6 @@ server.tool("list_tasks")(list_tasks_tool)
 server.tool("update_task")(update_task_tool)
 server.tool("complete_task")(complete_task_tool)
 server.tool("delete_task")(delete_task_tool)
-
-
-@server.tool("complete_task")
-async def complete_task_tool(arguments: CompleteTaskArguments) -> Dict[str, Any]:
-    """Mark a task as completed."""
-    from sqlmodel import Session
-
-    # Validate task ID
-    is_valid, error_msg = validate_task_id(arguments.task_id)
-    if not is_valid:
-        return {"success": False, "message": error_msg}
-
-    with next(get_session()) as session:
-        try:
-            completed_task = TaskService.complete_task(session, arguments.task_id)
-            if not completed_task:
-                return {"success": False, "message": f"Task with ID {arguments.task_id} not found"}
-
-            return {
-                "success": True,
-                "task": {
-                    "id": str(completed_task.id),
-                    "title": completed_task.title,
-                    "description": completed_task.description,
-                    "status": completed_task.status,
-                    "created_at": completed_task.created_at.isoformat(),
-                    "updated_at": completed_task.updated_at.isoformat(),
-                    "completed_at": completed_task.completed_at.isoformat() if completed_task.completed_at else None
-                },
-                "message": "Task marked as completed successfully"
-            }
-        except Exception as e:
-            return {"success": False, "message": f"Failed to complete task: {str(e)}"}
-
-
-@server.tool("delete_task")
-async def delete_task_tool(arguments: DeleteTaskArguments) -> Dict[str, Any]:
-    """Delete a task."""
-    from sqlmodel import Session
-
-    # Validate task ID
-    is_valid, error_msg = validate_task_id(arguments.task_id)
-    if not is_valid:
-        return {"success": False, "message": error_msg}
-
-    with next(get_session()) as session:
-        try:
-            success = TaskService.delete_task(session, arguments.task_id)
-            if not success:
-                return {"success": False, "message": f"Task with ID {arguments.task_id} not found"}
-
-            return {
-                "success": True,
-                "message": "Task deleted successfully"
-            }
-        except Exception as e:
-            return {"success": False, "message": f"Failed to delete task: {str(e)}"}
 
 
 # Register the server with the context manager

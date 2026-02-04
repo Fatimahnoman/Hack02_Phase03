@@ -12,7 +12,7 @@ class ToolCallBase(SQLModel):
     parameters: Dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
     result: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON, nullable=True))
     status: str = Field(sa_column=Column(String, nullable=False))  # "success", "error", "pending"
-    entity_id: Optional[uuid.UUID] = Field(default=None)
+    entity_id: Optional[str] = Field(default=None)
     entity_type: Optional[str] = Field(default=None, sa_column=Column(String, nullable=True))
 
 
@@ -29,7 +29,7 @@ class ToolCallCreate(SQLModel):
 
     function_name: str
     parameters: dict
-    entity_id: Optional[uuid.UUID] = None
+    entity_id: Optional[str] = None
     entity_type: Optional[str] = None
 
 

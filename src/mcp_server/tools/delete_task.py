@@ -6,12 +6,14 @@ from sqlmodel import Session
 import uuid
 
 from src.mcp_server.models.database import get_session
-from src.mcp_server.services.task_service import TaskService
+from backend.src.core.database import get_session_context  # Use backend's database session
+from backend.src.services.todo_service import delete_todo
 from src.mcp_server.utils.validators import validate_task_id
 
 
 class DeleteTaskArguments(BaseModel):
-    task_id: str
+    task_id: str = None
+    title: str = None
 
 
 async def delete_task_tool(arguments: DeleteTaskArguments) -> Dict[str, Any]:
@@ -21,15 +23,26 @@ async def delete_task_tool(arguments: DeleteTaskArguments) -> Dict[str, Any]:
     if not is_valid:
         return {"success": False, "message": error_msg}
 
-    with next(get_session()) as session:
+    try:
+        # Get backend session
+        backend_session_gen = get_session_context()
+        session = next(backend_session_gen)
+
         try:
-            success = TaskService.delete_task(session, uuid.UUID(arguments.task_id))
+            # Delete the todo (using default user ID 1)
+            user_id = 1  # Default user ID
+            success = delete_todo(session, int(arguments.task_id), user_id)
+
             if not success:
                 return {"success": False, "message": f"Task with ID {arguments.task_id} not found"}
+
+            session.commit()  # Commit the transaction
 
             return {
                 "success": True,
                 "message": "Task deleted successfully"
             }
-        except Exception as e:
-            return {"success": False, "message": f"Failed to delete task: {str(e)}"}
+        finally:
+            session.close()
+    except Exception as e:
+        return {"success": False, "message": f"Failed to delete task: {str(e)}"}
