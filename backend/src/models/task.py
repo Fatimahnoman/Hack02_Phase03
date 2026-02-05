@@ -10,17 +10,24 @@ class TaskBase(SQLModel):
 
     title: str = Field(min_length=1, max_length=255)
     description: Optional[str] = Field(default=None)
-    status: str = Field(default="pending", sa_column=Column(String, nullable=False))
+    status: str = Field(default="pending", sa_column=Column(String, nullable=False))  # ['pending', 'in-progress', 'completed', 'cancelled']
     priority: str = Field(default="medium", sa_column=Column(String, nullable=False))
+    user_id: str = Field(foreign_key="user.id")  # Foreign key linking to User
 
 
 class Task(TaskBase, table=True):
     """Task model representing a specific work item that can be created, updated, or managed through natural language commands."""
 
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()).replace('-', ''), primary_key=True)
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = Field(default=None)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if 'created_at' not in kwargs or kwargs['created_at'] is None:
+            self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
 
 
 class TaskCreate(TaskBase):
@@ -33,7 +40,7 @@ class TaskUpdate(SQLModel):
 
     title: Optional[str] = Field(default=None, min_length=1, max_length=255)
     description: Optional[str] = Field(default=None)
-    status: Optional[str] = Field(default=None)
+    status: Optional[str] = Field(default=None)  # ['pending', 'in-progress', 'completed', 'cancelled']
     priority: Optional[str] = Field(default=None)
 
 

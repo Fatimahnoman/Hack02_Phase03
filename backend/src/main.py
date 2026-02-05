@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from .api.chat_endpoint import router as chat_router
+from .api.routes.chat import router as chat_router
 from .api.auth_router import router as auth_router
 from .api.todo_router import router as todo_router
 from .api.task_router import router as task_router
@@ -52,10 +52,17 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
+# Replace the existing chat endpoint with our stateless version
+from .api.routes.chat import router as stateless_chat_router
+app.include_router(stateless_chat_router, prefix="/api/v1", tags=["chat"])
+
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(todo_router, prefix="/api/todos", tags=["todos"])
 app.include_router(task_router, prefix="/api", tags=["tasks"])
+
+# Include our new health check endpoints
+from .api.routes.health import router as health_router
+app.include_router(health_router, prefix="/api/v1", tags=["health"])
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

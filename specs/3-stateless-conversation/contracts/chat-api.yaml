@@ -1,0 +1,291 @@
+openapi: 3.0.0
+info:
+  title: Stateless Chatbot API
+  version: 1.0.0
+  description: API for stateless chatbot operations that rely on database state instead of conversation memory
+
+paths:
+  /chat:
+    post:
+      summary: Process a chat message in a stateless manner
+      description: Processes a user message without relying on conversation history. Each request is handled independently using only current input and database state.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful response containing bot reply and state information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Bad request - invalid input or parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/tasks:
+    get:
+      summary: Get user tasks from database
+      description: Retrieve all tasks for a specific user directly from the database, without relying on any cached state.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the user
+      responses:
+        '200':
+          description: List of user tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new task for user
+      description: Creates a new task for the user, querying the database for necessary state before creation.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid task data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/tasks/{task_id}:
+    put:
+      summary: Update a task for user
+      description: Updates a task for the user, fetching current state from database before applying changes.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the user
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - user_input
+        - user_id
+      properties:
+        user_input:
+          type: string
+          description: The message sent by the user
+          example: "What are my pending tasks?"
+        user_id:
+          type: string
+          description: Unique identifier of the user
+          example: "user-12345"
+        session_metadata:
+          type: object
+          description: Optional metadata about the session
+          properties:
+            client_type:
+              type: string
+              description: Type of client making the request
+            timestamp:
+              type: string
+              format: date-time
+              description: Client-side timestamp of the request
+
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - intent
+        - state_reflection
+      properties:
+        response:
+          type: string
+          description: The bot's response to the user
+          example: "You have 3 pending tasks: Task 1, Task 2, Task 3"
+        intent:
+          type: string
+          description: The intent detected from the user input
+          example: "get_pending_tasks"
+        state_reflection:
+          type: object
+          description: Reflection of the current database state that influenced the response
+          properties:
+            user_id:
+              type: string
+              description: User identifier
+            task_count:
+              type: integer
+              description: Current number of tasks for the user
+            last_updated:
+              type: string
+              format: date-time
+              description: Last time the user's tasks were updated
+        tool_execution_result:
+          type: object
+          description: Result of any tool executed during the request
+          properties:
+            success:
+              type: boolean
+              description: Whether the tool execution was successful
+            data:
+              type: object
+              description: Data returned by the tool execution
+        timestamp:
+          type: string
+          format: date-time
+          description: Server timestamp of the response
+
+    Task:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the task
+          example: "task-67890"
+        user_id:
+          type: string
+          description: Unique identifier of the user who owns the task
+          example: "user-12345"
+        title:
+          type: string
+          description: Title of the task
+          example: "Complete project proposal"
+        description:
+          type: string
+          description: Detailed description of the task
+          example: "Write and submit the Q1 project proposal document"
+        status:
+          type: string
+          enum: [pending, in-progress, completed, cancelled]
+          description: Current status of the task
+          example: "pending"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the task was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the task was last updated
+        completed_at:
+          type: string
+          format: date-time
+          description: Timestamp when the task was completed (if applicable)
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          description: Title of the new task
+          example: "Buy groceries"
+        description:
+          type: string
+          description: Detailed description of the new task
+          example: "Purchase milk, bread, and eggs from the store"
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Updated title of the task
+        description:
+          type: string
+          description: Updated description of the task
+        status:
+          type: string
+          enum: [pending, in-progress, completed, cancelled]
+          description: Updated status of the task
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "INVALID_INPUT"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The provided input was invalid"
+        details:
+          type: object
+          description: Additional error details (optional)

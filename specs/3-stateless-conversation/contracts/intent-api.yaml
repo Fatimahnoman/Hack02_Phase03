@@ -1,0 +1,181 @@
+openapi: 3.0.0
+info:
+  title: Intent Detection API
+  version: 1.0.0
+  description: API for detecting user intent from input without relying on conversation history
+
+paths:
+  /intent/detect:
+    post:
+      summary: Detect intent from user input
+      description: Analyzes user input to determine intent without considering conversation history. Each detection is performed independently.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntentDetectionRequest'
+      responses:
+        '200':
+          description: Successfully detected intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntentDetectionResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /intent/validate:
+    post:
+      summary: Validate detected intent parameters
+      description: Validates the parameters extracted from detected intent against required formats and constraints.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntentValidationRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntentValidationResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    IntentDetectionRequest:
+      type: object
+      required:
+        - text
+        - user_id
+      properties:
+        text:
+          type: string
+          description: The input text to analyze for intent
+          example: "What are my pending tasks?"
+        user_id:
+          type: string
+          description: User identifier (for context if needed)
+          example: "user-12345"
+        context:
+          type: object
+          description: Additional context (but should not influence intent detection)
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+              description: When the input was received
+
+    IntentDetectionResponse:
+      type: object
+      required:
+        - intent
+        - confidence
+        - parameters
+        - processed_without_history
+      properties:
+        intent:
+          type: string
+          description: Detected intent from the input
+          example: "get_pending_tasks"
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Confidence score for the detected intent
+          example: 0.95
+        parameters:
+          type: object
+          description: Extracted parameters from the input
+          example: {}
+        processed_without_history:
+          type: boolean
+          description: Indicates whether the intent was processed without using conversation history (should always be true)
+          example: true
+        details:
+          type: object
+          description: Additional details about the intent detection
+          properties:
+            alternatives:
+              type: array
+              items:
+                type: object
+                properties:
+                  intent:
+                    type: string
+                    description: Alternative intent
+                  confidence:
+                    type: number
+                    format: float
+                    description: Confidence for alternative intent
+
+    IntentValidationRequest:
+      type: object
+      required:
+        - intent
+        - parameters
+      properties:
+        intent:
+          type: string
+          description: The detected intent
+          example: "create_task"
+        parameters:
+          type: object
+          description: Parameters to validate
+          example:
+            title: "New task"
+            description: "Task description"
+
+    IntentValidationResponse:
+      type: object
+      required:
+        - valid
+        - errors
+      properties:
+        valid:
+          type: boolean
+          description: Whether the parameters are valid for the intent
+          example: true
+        errors:
+          type: array
+          items:
+            type: string
+            description: Error messages for validation failures
+          example: []
+        corrected_parameters:
+          type: object
+          description: Parameters with any corrections applied
+          example:
+            title: "New task"
+            description: "Task description"
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "INVALID_INPUT"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The provided input was invalid"
+        details:
+          type: object
+          description: Additional error details (optional)
