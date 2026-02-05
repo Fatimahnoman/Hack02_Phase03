@@ -3,6 +3,7 @@ Integration test for help intent flow.
 """
 import pytest
 from src.agents.intent_detector import IntentDetector
+from src.models.intent_result import IntentType
 from src.services.intent_mapping import IntentMapper
 
 
@@ -19,7 +20,7 @@ def test_help_flow_integration():
     intent_result = detector.detect(user_input)
 
     # Verify intent detection
-    assert intent_result.type == IntentDetector.IntentType.HELP
+    assert intent_result.type == IntentType.HELP
     assert intent_result.confidence >= 0.8
 
     # Step 2: Execute intent mapping
@@ -44,7 +45,7 @@ def test_help_short_command():
     result = mapper.execute_intent(intent_result)
 
     # Should detect as HELP and provide help message
-    assert intent_result.type == IntentDetector.IntentType.HELP
+    assert intent_result.type == IntentType.HELP
     assert result.success is True
     assert "help" in result.message.lower()
 

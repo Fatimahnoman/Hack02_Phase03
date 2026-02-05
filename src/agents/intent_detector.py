@@ -3,36 +3,10 @@ Intent Detector module for detecting user intents from natural language input.
 """
 import re
 from typing import Dict, List, Optional, Tuple
-from enum import Enum
+from ..models.intent_result import IntentType, IntentParameter, IntentResult
 
 
-class IntentType(Enum):
-    """Enumeration of possible intent types."""
-    ADD_TASK = "add_task"
-    LIST_TASKS = "list_tasks"
-    UPDATE_TASK = "update_task"
-    COMPLETE_TASK = "complete_task"
-    DELETE_TASK = "delete_task"
-    HELP = "help"
-    UNKNOWN = "unknown"
-
-
-class IntentParameter:
-    """Class representing parameters extracted from user input."""
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-
-class IntentResult:
-    """Class representing the result of intent detection."""
-    def __init__(self, intent_type: IntentType, confidence: float = 1.0,
-                 parameters: Optional[IntentParameter] = None,
-                 required_parameters: Optional[List[str]] = None):
-        self.type = intent_type
-        self.confidence = confidence
-        self.parameters = parameters or IntentParameter()
-        self.required_parameters = required_parameters or []
+from ..models.intent_result import IntentResult, IntentParameter
 
 
 class IntentDetector:
@@ -49,7 +23,8 @@ class IntentDetector:
                 r'\bmust\s+'
             ],
             IntentType.LIST_TASKS: [
-                r'\b(list|show|display|view|get|fetch)\s+(my\s+)?(tasks|todos|to-dos)\b',
+                r'\b(list|show|display|view|get|fetch)\s+(me\s+)?(my\s+)?(tasks|todos|to-dos)\b',
+                r'\b(list|show|display|view|get|fetch)\s+(me\s+)?(my\s+)?(completed|pending|active|open|closed)\s+(tasks|todos|to-dos)\b',
                 r'\bwhat.*tasks?\b',
                 r'\bsaved\s+todays?\b',
                 r'\bremind\s+me\s+about\s+tasks?\b'

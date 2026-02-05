@@ -3,6 +3,7 @@ Integration test for list_tasks intent flow.
 """
 import pytest
 from src.agents.intent_detector import IntentDetector
+from src.models.intent_result import IntentType
 from src.services.intent_mapping import IntentMapper
 from src.mcp.task_tools import task_tools
 
@@ -29,7 +30,7 @@ def test_list_tasks_flow_integration():
     intent_result = detector.detect(user_input)
 
     # Verify intent detection
-    assert intent_result.type == IntentDetector.IntentType.LIST_TASKS
+    assert intent_result.type == IntentType.LIST_TASKS
     assert intent_result.confidence >= 0.8
 
     # Step 2: Execute intent mapping
@@ -67,7 +68,7 @@ def test_list_completed_tasks():
     result = mapper.execute_intent(intent_result)
 
     # Should detect as LIST_TASKS and filter by completed status
-    assert intent_result.type == IntentDetector.IntentType.LIST_TASKS
+    assert intent_result.type == IntentType.LIST_TASKS
     assert result.success is True
 
 
@@ -86,7 +87,7 @@ def test_empty_tasks_list():
     result = mapper.execute_intent(intent_result)
 
     # Should return success with empty list
-    assert intent_result.type == IntentDetector.IntentType.LIST_TASKS
+    assert intent_result.type == IntentType.LIST_TASKS
     assert result.success is True
     assert "0" in result.message or "found" in result.message.lower()
 

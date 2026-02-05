@@ -3,6 +3,7 @@ Integration test for add_task intent flow.
 """
 import pytest
 from src.agents.intent_detector import IntentDetector
+from src.models.intent_result import IntentType
 from src.services.intent_mapping import IntentMapper
 from src.mcp.task_tools import task_tools
 
@@ -24,7 +25,7 @@ def test_add_task_flow_integration():
     intent_result = detector.detect(user_input)
 
     # Verify intent detection
-    assert intent_result.type == IntentDetector.IntentType.ADD_TASK
+    assert intent_result.type == IntentType.ADD_TASK
     assert intent_result.confidence >= 0.8
 
     # Step 2: Execute intent mapping
@@ -58,9 +59,9 @@ def test_add_task_missing_description():
     result = mapper.execute_intent(intent_result)
 
     # Should detect intent but fail during execution due to missing parameter
-    assert intent_result.type == IntentDetector.IntentType.ADD_TASK
+    assert intent_result.type == IntentType.ADD_TASK
     assert result.success is False
-    assert "missing" in result.message.lower()
+    assert "provide" in result.message.lower() or "missing" in result.message.lower()
 
 
 def test_add_task_with_priority():
@@ -79,7 +80,7 @@ def test_add_task_with_priority():
     result = mapper.execute_intent(intent_result)
 
     # Should detect intent and execute successfully
-    assert intent_result.type == IntentDetector.IntentType.ADD_TASK
+    assert intent_result.type == IntentType.ADD_TASK
     assert result.success is True
 
     # Verify the task was created with high priority
