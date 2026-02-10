@@ -12,7 +12,8 @@ class TaskBase(SQLModel):
     description: Optional[str] = Field(default=None)
     status: str = Field(default="pending", sa_column=Column(String, nullable=False))  # ['pending', 'in-progress', 'completed', 'cancelled']
     priority: str = Field(default="medium", sa_column=Column(String, nullable=False))
-    user_id: str = Field(foreign_key="user.id")  # Foreign key linking to User
+    user_id: int = Field(default=1, foreign_key="user.id")  # Foreign key linking to User, defaults to user 1
+    due_date: Optional[datetime] = Field(default=None)
 
 
 class Task(TaskBase, table=True):
@@ -32,7 +33,7 @@ class Task(TaskBase, table=True):
 
 class TaskCreate(TaskBase):
     """Schema for creating a new task."""
-    pass
+    due_date: Optional[datetime] = Field(default=None)
 
 
 class TaskUpdate(SQLModel):
@@ -42,6 +43,7 @@ class TaskUpdate(SQLModel):
     description: Optional[str] = Field(default=None)
     status: Optional[str] = Field(default=None)  # ['pending', 'in-progress', 'completed', 'cancelled']
     priority: Optional[str] = Field(default=None)
+    due_date: Optional[datetime] = Field(default=None)
 
 
 class TaskRead(TaskBase):
@@ -51,6 +53,7 @@ class TaskRead(TaskBase):
     created_at: datetime
     updated_at: datetime
     completed_at: Optional[datetime]
+    due_date: Optional[datetime] = Field(default=None)
 
 
 class TaskStatusUpdate(SQLModel):

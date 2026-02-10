@@ -1,5 +1,5 @@
 """
-Service layer for AI agent operations using OpenAI API.
+Service layer for AI agent operations using OpenRouter API.
 """
 import logging
 import os
@@ -23,14 +23,14 @@ logger = logging.getLogger(__name__)
 
 class AIAgentService:
     """
-    Service class for handling AI agent operations with OpenAI API.
+    Service class for handling AI agent operations with OpenRouter API.
     """
 
     @staticmethod
     @ai_circuit_breaker
     def generate_response(conversation_history: List[Message], system_prompt: Optional[str] = None) -> str:
         """
-        Generate a response from the AI agent based on conversation history.
+        Generate a response from the AI agent based on conversation history using OpenRouter API.
 
         Args:
             conversation_history: List of messages in the conversation
@@ -42,51 +42,58 @@ class AIAgentService:
         import time
         start_time = time.time()
 
-        logger.info(f"Generating AI response based on {len(conversation_history)} messages in history")
+        logger.info(f"Generating AI response using OpenRouter API based on {len(conversation_history)} messages in history")
 
         try:
-            # Format messages for OpenAI API
-            formatted_messages = []
+            # Initialize OpenAI client with OpenRouter configuration
+            openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+            if not openrouter_api_key:
+                logger.error("OPENROUTER_API_KEY environment variable is not set")
+                raise AIServiceAuthenticationError("OPENROUTER_API_KEY not configured")
 
-            # Add system prompt if provided
-            if system_prompt:
-                formatted_messages.append({"role": "system", "content": system_prompt})
-            else:
-                # Default system prompt for context-aware conversation
-                formatted_messages.append({
-                    "role": "system",
-                    "content": "You are a helpful AI assistant. Use the conversation history to provide context-aware responses."
-                })
+            # Configure OpenAI to use OpenRouter
+            openai.api_key = openrouter_api_key
+            openai.base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
             # Use context builder to format messages properly
             from .context_builder import ContextBuilder
-            formatted_context_messages = ContextBuilder.format_messages_for_agent(conversation_history)
-            formatted_messages.extend(formatted_context_messages)
+            formatted_messages = ContextBuilder.format_messages_for_agent(conversation_history)
 
-            # Determine if using OpenRouter or OpenAI
-            api_base_url = os.getenv("OPENAI_API_BASE_URL")
-            if api_base_url:
-                # Use OpenRouter API
-                client = openai.OpenAI(
-                    api_key=os.getenv("OPENAI_API_KEY"),
-                    base_url=os.getenv("OPENAI_API_BASE_URL")
-                )
+            # Build messages for OpenAI API (OpenRouter uses OpenAI-compatible format)
+            messages = []
+            
+            # Add system prompt if provided
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
             else:
-                # Use standard OpenAI API
-                client = openai.OpenAI(api_key=openai.api_key)
+                # Default system message
+                messages.append({"role": "system", "content": "You are a helpful AI assistant. Use the conversation history to provide context-aware responses."})
 
-            response = client.chat.completions.create(
-                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-                messages=formatted_messages,
+            # Add conversation history
+            for msg in formatted_messages:
+                role = msg.get("role", "user")
+                # Map roles appropriately
+                if role == "user":
+                    messages.append({"role": "user", "content": msg.get("content", "")})
+                elif role == "assistant" or role == "chatbot":
+                    messages.append({"role": "assistant", "content": msg.get("content", "")})
+                elif role == "system":
+                    # Add to system context if needed
+                    messages.append({"role": "system", "content": msg.get("content", "")})
+
+            # Call OpenRouter API (using OpenAI-compatible interface)
+            response = openai.chat.completions.create(
+                model=os.getenv("OPENROUTER_MODEL", "openai/gpt-3.5-turbo"),
+                messages=messages,
                 temperature=float(os.getenv("AGENT_TEMPERATURE", "0.7")),
                 max_tokens=int(os.getenv("MAX_RESPONSE_TOKENS", "1000")),
             )
 
+            # Extract response text from OpenAI response object
             ai_response = response.choices[0].message.content
 
-            if ai_response is None:
-                logger.warning("AI response was None, using fallback")
-                from ..config import settings
+            if ai_response is None or ai_response.strip() == "":
+                logger.warning("AI response was empty, using fallback")
                 return settings.fallback_response
 
             # Calculate and log response time
@@ -96,24 +103,36 @@ class AIAgentService:
             return ai_response
 
         except openai.AuthenticationError as e:
-            logger.error(f"OpenAI API authentication failed: {str(e)}")
+            logger.error(f"OpenRouter API authentication failed: {str(e)}")
             raise AIServiceAuthenticationError(f"AI service authentication error: {str(e)}")
-
+        
         except openai.RateLimitError as e:
-            logger.error(f"OpenAI API rate limit exceeded: {str(e)}")
+            logger.error(f"OpenRouter API rate limit exceeded: {str(e)}")
             raise AIServiceRateLimitError(f"AI service rate limit exceeded: {str(e)}")
-
+        
         except openai.APIConnectionError as e:
-            logger.error(f"Failed to connect to OpenAI API: {str(e)}")
+            logger.error(f"Failed to connect to OpenRouter API: {str(e)}")
             raise AIServiceUnavailableError(f"AI service connection error: {str(e)}")
-
+        
         except openai.APITimeoutError as e:
-            logger.error(f"OpenAI API request timed out: {str(e)}")
+            logger.error(f"OpenRouter API request timed out: {str(e)}")
             raise AIServiceTimeoutError(f"AI service timeout error: {str(e)}")
+        
+        except openai.APIError as e:
+            logger.error(f"OpenRouter API error: {str(e)}")
+            raise AIServiceUnavailableError(f"AI service error: {str(e)}")
 
         except Exception as e:
-            logger.error(f"Unexpected error generating AI response: {str(e)}")
-            raise AIServiceError(f"AI service error: {str(e)}")
+            error_str = str(e).lower()
+            if "connection" in error_str or "timeout" in error_str:
+                logger.error(f"Failed to connect to OpenRouter API: {str(e)}")
+                raise AIServiceUnavailableError(f"AI service connection error: {str(e)}")
+            elif "timeout" in error_str:
+                logger.error(f"OpenRouter API request timed out: {str(e)}")
+                raise AIServiceTimeoutError(f"AI service timeout error: {str(e)}")
+            else:
+                logger.error(f"Unexpected error generating AI response: {str(e)}")
+                raise AIServiceError(f"AI service error: {str(e)}")
 
     @staticmethod
     def validate_response(response: str) -> bool:

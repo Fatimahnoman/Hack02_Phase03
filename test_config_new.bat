@@ -1,0 +1,3 @@
+@echo off
+echo Testing configuration after fix...
+python -c "import sys; import os; sys.path.insert(0, os.path.join(os.getcwd(), 'backend')); from backend.src.core.config import settings; print('Configuration Check:'); print(f'COHERE_API_KEY: {'*' * 20}{settings.cohere_api_key[-5:] if settings.cohere_api_key else 'NOT SET'}'); print(f'COHERE_MODEL: {settings.cohere_model}')"

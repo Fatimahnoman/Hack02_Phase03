@@ -1,69 +1,55 @@
-# Global Constitution Technology Matrix
+# [PROJECT_NAME] Constitution
+<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 
 ## Core Principles
 
-### I. Phase I: In-Memory Console Application
-Phase I applications must remain as in-memory console applications only. No web frontend, database, or authentication systems are permitted during this phase. Focus on core business logic and algorithmic implementation in a standalone console environment.
+### [PRINCIPLE_1_NAME]
+<!-- Example: I. Library-First -->
+[PRINCIPLE_1_DESCRIPTION]
+<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
 
-### II. Phase II: Full-Stack Web Application
-Phase II applications must implement the following technology stack:
-- Backend: Python REST API
-- Database: Neon Serverless PostgreSQL
-- ORM/Data layer: SQLModel or equivalent
-- Frontend: Next.js (React, TypeScript)
-- Authentication: Better Auth (signup/signin)
-- Architecture: Full-stack web application
+### [PRINCIPLE_2_NAME]
+<!-- Example: II. CLI Interface -->
+[PRINCIPLE_2_DESCRIPTION]
+<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
 
-### III. Phase III and Later: Advanced Systems
-Phase III and subsequent phases may incorporate advanced cloud infrastructure, agents, and AI orchestration systems. AI and agent frameworks are prohibited until Phase III and later.
+### [PRINCIPLE_3_NAME]
+<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
+[PRINCIPLE_3_DESCRIPTION]
+<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
 
-### IV. Phase Isolation (NON-NEGOTIABLE)
-Technology usage is strictly governed by phase requirements:
-- Authentication is allowed starting Phase II
-- Web frontend is allowed starting Phase II
-- Neon PostgreSQL is allowed starting Phase II
-- No AI or agent frameworks until later phases
-- Each phase must be completed before advancing to the next
+### [PRINCIPLE_4_NAME]
+<!-- Example: IV. Integration Testing -->
+[PRINCIPLE_4_DESCRIPTION]
+<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
 
-### V. Technology Compliance
-All implementations must strictly adhere to the approved technology stack for the current phase. Deviations require constitutional amendment and explicit approval.
+### [PRINCIPLE_5_NAME]
+<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
+[PRINCIPLE_5_DESCRIPTION]
+<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
-### VI. Architecture Evolution
-Applications must be designed with phase progression in mind, allowing for smooth transitions between phases while maintaining compliance with current phase requirements.
+### [PRINCIPLE_6_NAME]
 
-## Technology Stack Requirements
 
-### Phase I Stack:
-- In-memory console application only
-- No persistent storage
-- No web interface
-- No authentication systems
+[PRINCIPLE__DESCRIPTION]
 
-### Phase II Stack:
-- Backend: Python REST API
-- Database: Neon Serverless PostgreSQL
-- ORM/Data layer: SQLModel or equivalent
-- Frontend: Next.js (React, TypeScript)
-- Authentication: Better Auth
-- Architecture: Full-stack web application
+## [SECTION_2_NAME]
+<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 
-### Phase III+ Stack:
-- Advanced cloud infrastructure
-- AI and agent frameworks
-- Enhanced orchestration systems
+[SECTION_2_CONTENT]
+<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
 
-## Development Workflow
+## [SECTION_3_NAME]
+<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
 
-### Phase Compliance Review:
-- All PRs must verify compliance with current phase requirements
-- Technology stack restrictions must be enforced
-- Architecture decisions must align with phase-appropriate technologies
-- Migration plans required for phase transitions
+[SECTION_3_CONTENT]
+<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
 ## Governance
+<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-This constitution serves as the authoritative technology policy for all phases of development. All development activities must comply with the current phase requirements and approved technology stack.
+[GOVERNANCE_RULES]
+<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
 
-Amendments to this constitution require explicit documentation of changes, approval process, and migration plan for any existing code that may be affected. The phase isolation rules preserve the structured evolution of applications from simple console applications to complex AI-powered systems.
-
-**Version**: 2.0.0 | **Ratified**: 2025-12-01 | **Last Amended**: 2026-01-05
+**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
+<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->

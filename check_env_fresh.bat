@@ -1,0 +1,3 @@
+@echo off
+echo Starting fresh Python process to check environment...
+python -c "import os; print('OPENAI_API_BASE_URL:', os.getenv('OPENAI_API_BASE_URL')); print('OPENAI_MODEL:', os.getenv('OPENAI_MODEL'))"

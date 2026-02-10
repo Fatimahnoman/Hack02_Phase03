@@ -37,9 +37,9 @@ class Settings(BaseSettings):
     algorithm: str = os.getenv("ALGORITHM", "HS256")
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
-    # AI settings
-    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
-    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+    # AI settings - Now using Cohere API
+    cohere_api_key: str = os.getenv("COHERE_API_KEY", "")
+    cohere_model: str = os.getenv("COHERE_MODEL", "command-r")
     agent_temperature: float = float(os.getenv("AGENT_TEMPERATURE", "0.7"))
     max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "8000"))
     max_response_tokens: int = int(os.getenv("MAX_RESPONSE_TOKENS", "1000"))

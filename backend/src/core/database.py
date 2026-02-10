@@ -3,14 +3,31 @@ from contextlib import contextmanager
 from typing import Generator
 from .config import settings
 import os
+from sqlalchemy.pool import QueuePool
 
 
-# Create the database engine
-engine = create_engine(
-    settings.database_url,
-    echo=settings.database_echo,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {}
-)
+# Create the database engine with connection pooling for PostgreSQL
+connect_args = {"check_same_thread": False} if "sqlite" in settings.database_url else {}
+
+# For PostgreSQL (especially Neon), configure connection pooling
+if "postgresql" in settings.database_url:
+    engine = create_engine(
+        settings.database_url,
+        echo=settings.database_echo,
+        poolclass=QueuePool,
+        pool_size=10,          # Number of connections to maintain
+        max_overflow=20,       # Additional connections beyond pool_size
+        pool_pre_ping=True,    # Verify connections before use
+        pool_recycle=300,      # Recycle connections after 5 minutes
+        connect_args=connect_args
+    )
+else:
+    # For SQLite, use the simpler configuration
+    engine = create_engine(
+        settings.database_url,
+        echo=settings.database_echo,
+        connect_args=connect_args
+    )
 
 
 def init_db():
@@ -34,14 +51,21 @@ def get_session() -> Generator[Session, None, None]:
         session.close()
 
 
+from fastapi import Depends
+
+
 def get_session_context():
     """Dependency injection for FastAPI to provide database session."""
     session = Session(engine)
     try:
         yield session
         session.commit()
-    except Exception:
+    except Exception as e:
         session.rollback()
+        # Log the exception for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Database session error: {e}")
         raise
     finally:
         session.close()

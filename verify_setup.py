@@ -16,7 +16,7 @@ def check_python_dependencies():
         "pydantic",
         "pydantic_settings",
         "uvicorn",
-        "openai",
+        "cohere",
         "passlib",
         "python_jose",
         "cryptography"

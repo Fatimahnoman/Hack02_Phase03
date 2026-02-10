@@ -10,5 +10,5 @@ python-multipart
 passlib[argon2]
 python-jose[cryptography]
 SQLAlchemy
-openai
+cohere
 bcrypt

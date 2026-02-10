@@ -10,8 +10,9 @@ from sqlmodel import Session, select
 class MCPTaskToolRegistry:
     """Registry for MCP tools that can be used by the OpenAI agent."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, user_id: int = 1):
         self.session = session
+        self.user_id = user_id
 
     def register_tools(self) -> Dict[str, callable]:
         """Register all available MCP tools."""
@@ -26,7 +27,7 @@ class MCPTaskToolRegistry:
     def create_task(self, title: str, description: Optional[str] = None, priority: str = "medium") -> Dict[str, Any]:
         """Create a new task via MCP tool."""
         try:
-            task_create = TaskCreate(title=title, description=description, priority=priority)
+            task_create = TaskCreate(title=title, description=description, priority=priority, user_id=self.user_id)
             task = Task(**task_create.dict())
 
             self.session.add(task)
@@ -75,8 +76,8 @@ class MCPTaskToolRegistry:
             from .task_display_service import TaskDisplayService
             display_service = TaskDisplayService(self.session)
 
-            # Get tasks with display numbers
-            numbered_tasks = display_service.get_tasks_with_numbers(status)
+            # Get tasks with display numbers for the specific user
+            numbered_tasks = display_service.get_tasks_with_numbers(status, user_id=self.user_id)
 
             # Log the tool call
             tool_call = ToolCall(
@@ -119,20 +120,21 @@ class MCPTaskToolRegistry:
                    status: Optional[str] = None, priority: Optional[str] = None) -> Dict[str, Any]:
         """Update an existing task."""
         try:
-            # Find the task - either by ID or by title
+            # Find the task - either by ID or by title, but only for this user
             task = None
 
             if task_id:
                 try:
                     task_uuid = UUID(task_id)
-                    task = self.session.get(Task, task_uuid)
+                    statement = select(Task).where(Task.id == task_uuid).where(Task.user_id == self.user_id)
+                    task = self.session.exec(statement).first()
                 except ValueError:
                     # If task_id is not a valid UUID, treat it as a title
-                    statement = select(Task).where(Task.title == task_id)
+                    statement = select(Task).where(Task.title == task_id).where(Task.user_id == self.user_id)
                     task = self.session.exec(statement).first()
             elif title:
                 # Find by title if no ID provided
-                statement = select(Task).where(Task.title == title)
+                statement = select(Task).where(Task.title == title).where(Task.user_id == self.user_id)
                 task = self.session.exec(statement).first()
 
             if not task:
@@ -191,20 +193,21 @@ class MCPTaskToolRegistry:
     def complete_task(self, task_id: str = None, title: Optional[str] = None) -> Dict[str, Any]:
         """Mark a task as completed."""
         try:
-            # Find the task - either by ID or by title
+            # Find the task - either by ID or by title, but only for this user
             task = None
 
             if task_id:
                 try:
                     task_uuid = UUID(task_id)
-                    task = self.session.get(Task, task_uuid)
+                    statement = select(Task).where(Task.id == task_uuid).where(Task.user_id == self.user_id)
+                    task = self.session.exec(statement).first()
                 except ValueError:
                     # If task_id is not a valid UUID, treat it as a title
-                    statement = select(Task).where(Task.title == task_id)
+                    statement = select(Task).where(Task.title == task_id).where(Task.user_id == self.user_id)
                     task = self.session.exec(statement).first()
             elif title:
                 # Find by title if no ID provided
-                statement = select(Task).where(Task.title == title)
+                statement = select(Task).where(Task.title == title).where(Task.user_id == self.user_id)
                 task = self.session.exec(statement).first()
 
             if not task:
@@ -253,20 +256,21 @@ class MCPTaskToolRegistry:
     def delete_task(self, task_id: str = None, title: Optional[str] = None) -> Dict[str, Any]:
         """Delete a task."""
         try:
-            # Find the task - either by ID or by title
+            # Find the task - either by ID or by title, but only for this user
             task = None
 
             if task_id:
                 try:
                     task_uuid = UUID(task_id)
-                    task = self.session.get(Task, task_uuid)
+                    statement = select(Task).where(Task.id == task_uuid).where(Task.user_id == self.user_id)
+                    task = self.session.exec(statement).first()
                 except ValueError:
                     # If task_id is not a valid UUID, treat it as a title
-                    statement = select(Task).where(Task.title == task_id)
+                    statement = select(Task).where(Task.title == task_id).where(Task.user_id == self.user_id)
                     task = self.session.exec(statement).first()
             elif title:
                 # Find by title if no ID provided
-                statement = select(Task).where(Task.title == title)
+                statement = select(Task).where(Task.title == title).where(Task.user_id == self.user_id)
                 task = self.session.exec(statement).first()
 
             if not task:

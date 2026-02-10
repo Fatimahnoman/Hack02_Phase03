@@ -17,10 +17,14 @@ class Settings(BaseSettings):
     # Allow either DATABASE_ECHO or DB_ECHO in env files
     database_echo: bool = os.getenv("DATABASE_ECHO", os.getenv("DB_ECHO", "false")).lower() == "true"
 
-    # OpenAI settings
-    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
-    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview")
-    openai_api_base_url: str = os.getenv("OPENAI_API_BASE_URL", "")
+    # Cohere settings (replacing OpenAI)
+    cohere_api_key: str = os.getenv("COHERE_API_KEY", "")
+    cohere_model: str = os.getenv("COHERE_MODEL", "command-r")
+    
+    # OpenRouter settings
+    openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
+    openrouter_base_url: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+    openrouter_model: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-3.5-turbo")
 
     # Application settings
     app_name: str = "Agent-Orchestrated Task Management"
@@ -43,7 +47,7 @@ class Settings(BaseSettings):
     agent_temperature: float = float(os.getenv("AGENT_TEMPERATURE", "0.7"))
     max_context_tokens: int = int(os.getenv("MAX_CONTEXT_TOKENS", "8000"))
     max_response_tokens: int = int(os.getenv("MAX_RESPONSE_TOKENS", "1000"))
-    fallback_response: str = os.getenv("FALLBACK_RESPONSE", "Hi there! 👋 Hello! I'm your AI assistant. How can I help you today?")
+    fallback_response: str = os.getenv("FALLBACK_RESPONSE", "I encountered an error processing your request.")
 
     model_config = {
         "case_sensitive": True,

@@ -12,12 +12,13 @@ class TaskDisplayService:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_tasks_with_numbers(self, status: Optional[str] = None) -> List[Dict]:
+    def get_tasks_with_numbers(self, status: Optional[str] = None, user_id: Optional[int] = None) -> List[Dict]:
         """
         Get all tasks with their display numbers for user presentation.
 
         Args:
             status: Optional status filter
+            user_id: Optional user ID filter
 
         Returns:
             List of tasks with their display numbers
@@ -25,6 +26,8 @@ class TaskDisplayService:
         statement = select(Task).order_by(Task.created_at.desc())
         if status:
             statement = statement.where(Task.status == status)
+        if user_id is not None:
+            statement = statement.where(Task.user_id == user_id)
 
         tasks = self.session.exec(statement).all()
 

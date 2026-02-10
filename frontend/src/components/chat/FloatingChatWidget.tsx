@@ -43,15 +43,18 @@ const FloatingChatWidget: React.FC = () => {
 
     try {
       // Call the backend chat API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
-          message: messageToSend,
-          conversation_id: currentConversationId || undefined,
+          user_input: messageToSend,
+          user_id: user ? user.id.toString() : 'anonymous',
+          session_metadata: {
+            conversation_id: currentConversationId || undefined
+          }
         }),
       });
 

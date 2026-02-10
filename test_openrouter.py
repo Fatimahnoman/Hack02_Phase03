@@ -1,28 +1,15 @@
-import openai
+import cohere
 from backend.src.core.config import settings
 
-print("Testing OpenRouter configuration...")
-print(f"API Key: {settings.openai_api_key[:10]}... (truncated)")
-print(f"Base URL: {settings.openai_api_base_url}")
-print(f"Model: {settings.openai_model}")
+print("Testing Cohere configuration...")
+print(f"API Key configured: {bool(settings.cohere_api_key)}")
+print(f"Model: {settings.cohere_model}")
 
-# Initialize OpenAI client with OpenRouter settings
-client_params = {"api_key": settings.openai_api_key}
-if settings.openai_api_base_url:
-    client_params["base_url"] = settings.openai_api_base_url
+client = cohere.Client(api_key=settings.cohere_api_key)
 
-print(f"Client params: {client_params}")
-
-client = openai.OpenAI(**client_params)
-
-# Try a simple test call
 try:
-    completion = client.chat.completions.create(
-        model=settings.openai_model,
-        messages=[{"role": "user", "content": "hi"}],
-        max_tokens=10
-    )
-    print("SUCCESS: OpenRouter connection works!")
-    print(f"Response: {completion.choices[0].message.content}")
+    resp = client.chat(message="hi", model=settings.cohere_model)
+    print("SUCCESS: Cohere connection works!")
+    print(f"Response: {resp.text}")
 except Exception as e:
     print(f"ERROR: {e}")
