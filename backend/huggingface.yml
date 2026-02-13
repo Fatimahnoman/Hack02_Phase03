@@ -1,0 +1,7 @@
+# Hugging Face Space configuration
+runtime:
+  cpu: 2
+  memory: 8GiB
+  accelerator: null  # Change to "gpu" if you need GPU acceleration
+
+sdk: docker

@@ -28,8 +28,11 @@ const DashboardPage = () => {
       try {
         // Fetch traditional todos
         try {
+          console.log('Fetching todos...');
           const todosResponse = await todoAPI.getAll();
-          setTodos(Array.isArray(todosResponse.data) ? todosResponse.data : []);
+          console.log('Todos response:', todosResponse);
+          // The backend returns the array directly, not wrapped in a 'data' property
+          setTodos(Array.isArray(todosResponse) ? todosResponse : []);
         } catch (error) {
           console.error('Error fetching todos:', error);
           // Don't fail completely if one fails
@@ -37,8 +40,14 @@ const DashboardPage = () => {
 
         // Fetch AI-managed tasks
         try {
+          console.log('Fetching tasks...');
           const tasksResponse = await taskAPI.getAll();
-          setTasks(Array.isArray(tasksResponse.data) ? tasksResponse.data : []);
+          console.log('Tasks response:', tasksResponse);
+          console.log('Tasks response type:', typeof tasksResponse);
+          console.log('Is tasks response array?', Array.isArray(tasksResponse));
+          
+          // The backend returns the array directly, not wrapped in a 'data' property
+          setTasks(Array.isArray(tasksResponse) ? tasksResponse : []);
         } catch (error) {
           console.error('Error fetching tasks:', error);
           // Don't fail completely if one fails
@@ -269,7 +278,7 @@ const DashboardPage = () => {
               originalId: todo.id
             })),
             ...tasks.map(task => ({
-              id: parseInt(task.id) || 0, // Convert string ID to number for compatibility
+              id: typeof task.id === 'string' ? (parseInt(task.id) || 0) : task.id, // Convert string ID to number for compatibility
               title: task.title,
               description: task.description || '',
               completed: task.status === 'completed',
@@ -306,7 +315,7 @@ const DashboardPage = () => {
               originalId: todo.id
             })),
             ...tasks.map(task => ({
-              id: parseInt(task.id) || 0, // Convert string ID to number for compatibility
+              id: typeof task.id === 'string' ? (parseInt(task.id) || 0) : task.id, // Convert string ID to number for compatibility
               title: task.title,
               description: task.description || '',
               completed: task.status === 'completed',

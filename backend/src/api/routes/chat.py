@@ -8,6 +8,8 @@ from ...services.stateless_conversation_service import StatelessConversationServ
 from ...services.database_service import DatabaseService
 from pydantic import BaseModel
 from datetime import datetime
+from ...services.auth_service import get_current_user
+from ...models.user import User
 
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -31,6 +33,7 @@ class ChatResponse(BaseModel):
 @router.post("/", response_model=ChatResponse)
 async def process_chat_message(
     request: ChatRequest,
+    current_user: User = Depends(get_current_user),  # Get the authenticated user
     session: Session = Depends(get_session_context)
 ) -> ChatResponse:
     """
@@ -44,10 +47,15 @@ async def process_chat_message(
         db_service = DatabaseService(session)
         conversation_service = StatelessConversationService(db_service)
 
-        # Process the chat request statelessly
+        # Use the authenticated user's ID as the primary user context
+        # Only use the user_id from the request as a potential override if needed
+        effective_user_id = str(current_user.id)
+        print(f"Chat endpoint - Authenticated user ID: {effective_user_id}, Request user_id: {request.user_id}")
+        
+        # Process the chat request statelessly, using the authenticated user's ID
         result = await conversation_service.process_request(
             user_input=request.user_input,
-            user_id=request.user_id,
+            user_id=effective_user_id,  # Use the authenticated user's ID
             session_metadata=request.session_metadata
         )
 
@@ -67,7 +75,7 @@ async def process_chat_message(
         import traceback
         error_msg = str(e)
         print(f"Error in chat endpoint: {e}")
-        
+
         # Check if this is an API-related error that shouldn't be treated as auth error
         if "401" in error_msg or "Unauthorized" in error_msg or "User not found" in error_msg:
             # This is an API error, not a user authentication error
@@ -83,7 +91,7 @@ async def process_chat_message(
                 state_reflection={},
                 timestamp=datetime.utcnow().isoformat()
             )
-        
+
         return error_response
 
 

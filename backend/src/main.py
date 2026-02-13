@@ -7,9 +7,9 @@ from .api.routes.chat import router as chat_router
 from .api.auth_router import router as auth_router
 from .api.todo_router import router as todo_router
 from .api.task_router import router as task_router
+from .core.config import settings
 from .core.database import init_db
 from .models import *  # Import all models to register them with SQLModel
-from .core.config import settings
 import logging
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -45,7 +45,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

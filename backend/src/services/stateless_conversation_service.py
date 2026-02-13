@@ -49,10 +49,21 @@ class StatelessConversationService:
                 "tool_calls": tool_calls
             } if tool_calls else None
 
+            # Commit the session to ensure all database changes are persisted
+            self.db_service.session.commit()
+
         except Exception as e:
             print(f"Error processing request with agent: {e}")
-            response = "I'm sorry, I encountered an issue processing your request. Please try again."
+            # Check if this is an API authentication error
+            error_str = str(e).lower()
+            if "401" in error_str or "authentication" in error_str or "user not found" in error_str or "invalid api" in error_str:
+                response = "I'm sorry, there's an issue with the AI service configuration. Please check that your API key is valid and active."
+            else:
+                response = "I'm sorry, I encountered an issue processing your request. Please try again."
             tool_execution_result = None
+            
+            # Rollback the session in case of error
+            self.db_service.session.rollback()
 
         # Get current user state
         try:
@@ -82,60 +93,68 @@ class StatelessConversationService:
         Validate the provided user_id or get a default valid user_id.
         This ensures we always have a valid user_id to work with.
         """
+        # First, try to use the user_id from the request if provided and valid
         if user_id:
             try:
                 # Try to convert to int to validate
                 user_id_int = int(user_id)
-                
+
                 # Check if the user exists in the database
                 from sqlmodel import select
                 from ..models.user import User
                 existing_user = self.db_service.session.exec(
                     select(User).where(User.id == user_id_int)
                 ).first()
-                
+
                 if existing_user:
+                    print(f"Using provided user_id: {user_id_int}")  # Debug log
                     return user_id_int
                 else:
-                    # If user doesn't exist, fall back to default behavior
-                    pass
-            except (ValueError, TypeError):
+                    print(f"Provided user_id {user_id_int} does not exist, falling back to default")  # Debug log
+            except (ValueError, TypeError) as e:
+                print(f"Error converting user_id '{user_id}' to int: {e}")  # Debug log
                 # If conversion fails, fall back to default
                 pass
 
-        # If no user_id provided, invalid, or doesn't exist, find or create a default user
+        # If no valid user_id provided, try to get the authenticated user from the session
+        # This is a fallback to try to get the user from the current session context
+        # (though this is tricky in a stateless service)
+        
+        # If still no user found, look for the first user as a fallback
         from sqlmodel import select
         from ..models.user import User
         from datetime import datetime, timezone
-        
+
         # Look for any existing user first
         first_user = self.db_service.session.exec(
             select(User).order_by(User.id)
         ).first()
-        
+
         if first_user:
+            print(f"Returning first user as fallback: {first_user.id}")  # Debug log
             return first_user.id
         else:
             # If no users exist, create a default system user
             # This mimics the Phase 5 behavior of having a default user
             from ..services.auth_service import get_password_hash
             import secrets
-            
+
             # Create a default user with a random secure password
             default_email = "system@example.com"
             default_password = secrets.token_urlsafe(32)  # Random secure password
             hashed_password = get_password_hash(default_password)
             current_time = datetime.now(timezone.utc)
-            
+
             default_user = User(
                 email=default_email,
                 hashed_password=hashed_password,
                 created_at=current_time,
                 updated_at=current_time
             )
-            
+
             self.db_service.session.add(default_user)
             self.db_service.session.commit()
             self.db_service.session.refresh(default_user)
-            
+
+            print(f"Created and returning new default user: {default_user.id}")  # Debug log
             return default_user.id

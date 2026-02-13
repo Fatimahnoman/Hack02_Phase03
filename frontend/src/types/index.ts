@@ -12,8 +12,8 @@ export interface Todo {
   completed: boolean;
   due_date?: string; // Optional due date
   user_id: number;
-  created_at: string;
-  updated_at: string;
+  created_at?: string; // Optional to allow for new todos that haven't been saved yet
+  updated_at?: string; // Optional to allow for new todos that haven't been saved yet
 }
 
 export interface TodoCreate {
@@ -27,6 +27,8 @@ export interface TodoUpdate {
   description?: string;
   due_date?: string;
   completed?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuthResponse {

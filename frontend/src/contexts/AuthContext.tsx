@@ -42,9 +42,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login(email, password);
-      const { access_token } = response.data;
-
-      localStorage.setItem('access_token', access_token);
+      
+      // The access_token is already stored in localStorage by authAPI
+      // We just need to set the user data
       localStorage.setItem('user_email', email); // Store email for restoration
 
       // In a real app, you would fetch user details here
@@ -59,9 +59,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const register = async (email: string, password: string) => {
     try {
       const response = await authAPI.register({ email, password });
-      const { access_token } = response.data;
 
-      localStorage.setItem('access_token', access_token);
+      // The access_token is already stored in localStorage by authAPI
       localStorage.setItem('user_email', email); // Store email for restoration
 
       // In a real app, you would fetch user details here

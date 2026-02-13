@@ -52,7 +52,7 @@ def create_task_endpoint(
     session: Session = Depends(get_session_context)
 ):
     """Create a new task for the current user."""
-    created_task = service_create_task(session, task)
+    created_task = service_create_task(session, task, current_user.id)
     return TaskResponse.from_task(created_task)
 
 @router.get("/tasks", response_model=List[TaskResponse])
@@ -61,7 +61,7 @@ def read_tasks(
     session: Session = Depends(get_session_context)
 ):
     """Get all tasks for the current user."""
-    tasks = service_get_user_tasks(session)
+    tasks = service_get_user_tasks(session, current_user.id)
     return [TaskResponse.from_task(task) for task in tasks]
 
 @router.get("/tasks/{task_id}", response_model=TaskResponse)

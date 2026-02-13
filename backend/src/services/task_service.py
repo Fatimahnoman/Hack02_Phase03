@@ -6,7 +6,7 @@ from ..models.task import Task, TaskCreate, TaskUpdate, TaskStatusUpdate
 from ..models.user import User
 import uuid as uuid_lib
 
-def create_task(session: Session, task_data: TaskCreate) -> Task:
+def create_task(session: Session, task_data: TaskCreate, user_id: int) -> Task:
     """Create a new task."""
     # Let the model generate its own ID using the default factory
     task = Task(
@@ -14,15 +14,16 @@ def create_task(session: Session, task_data: TaskCreate) -> Task:
         description=task_data.description,
         status=task_data.status,
         priority=task_data.priority,
+        user_id=user_id
     )
     session.add(task)
     session.commit()
     session.refresh(task)
     return task
 
-def get_user_tasks(session: Session) -> List[Task]:
-    """Get all tasks (since we're not storing user association in the current task model)."""
-    statement = select(Task).order_by(Task.created_at.desc())
+def get_user_tasks(session: Session, user_id: int) -> List[Task]:
+    """Get all tasks for a specific user."""
+    statement = select(Task).where(Task.user_id == user_id).order_by(Task.created_at.desc())
     return session.exec(statement).all()
 
 def get_task_by_id(session: Session, task_id: str) -> Optional[Task]:

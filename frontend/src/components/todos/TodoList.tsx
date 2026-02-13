@@ -32,10 +32,7 @@ const TodoList = ({ todos, onToggle, onUpdate, onDelete, emptyState }: TodoListP
       {todos.map((item) => (
         <TodoItem
           key={item.originalId}
-          todo={{
-            ...item,
-            id: typeof item.id === 'number' ? item.id : parseInt(item.id) || 0
-          }}
+          todo={item}
           onToggle={(id, completed) => onToggle(item.originalId, completed)}
           onUpdate={(id, updates) => onUpdate(item.originalId, updates)}
           onDelete={(id) => onDelete(item.originalId)}
