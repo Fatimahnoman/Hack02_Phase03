@@ -3,11 +3,11 @@ import { Todo, TodoUpdate } from '../../types';
 import { Task, TaskUpdate } from '../../services/api';
 import TodoItem from './TodoItem';
 
-// Define a unified interface for both todos and tasks
-interface UnifiedItem extends Todo {
+// Define a unified type for both todos and tasks
+type UnifiedItem = Todo & {
   type: 'todo' | 'task';
   originalId: string | number;
-}
+};
 
 interface TodoListProps {
   todos: UnifiedItem[];
