@@ -1,22 +1,8 @@
 {
-  "version": 2,
-  "name": "evolution-of-todo-frontend",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next",
-      "config": {
-        "serverless": true
-      }
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://fatimahnoman-phase-three.hf.space/api/:path*"
     }
-  ],
-  "env": {
-    "NEXT_PUBLIC_API_URL": "https://fatimahnoman-phase-three.hf.space"
-  }
+  ]
 }
