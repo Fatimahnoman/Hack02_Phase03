@@ -23,8 +23,8 @@ export interface TaskUpdate {
   due_date?: string;
 }
 
-// Use the environment variable for the API base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://fatimahnoman-phase-three.hf.space';
+// Use the environment variable for the API base URL, forced to HTTPS
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://fatimahnoman-phase-three.hf.space').replace('http://', 'https://');
 
 // Create the main API instance
 const api = axios.create({
