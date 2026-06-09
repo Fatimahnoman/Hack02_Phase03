@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
     # CORS settings
-    allowed_origins: list = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+    allowed_origins: List[str] = os.getenv("ALLOWED_ORIGINS", "https://hack02-phase03.vercel.app,http://localhost:3000,http://localhost:3001").split(",")
 
     # MCP settings
     mcp_server_url: str = os.getenv("MCP_SERVER_URL", "")
